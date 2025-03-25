@@ -9,9 +9,14 @@ dotenv.config();  // Load environment variables from .env file
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",  // For local development
+  "https://comptron.vercel.app" // Allow requests from your deployed frontend
+];
+
 // Enable CORS with specific origin (your frontend)
 const corsOptions = {
-  origin: "http://localhost:5173",  // Allow requests from this origin
+  origin: allowedOrigins,  // Allow requests from this origin
   methods: "GET,POST,PUT,DELETE",  // Allow these methods
   allowedHeaders: "Content-Type,Authorization",  // Allow these headers
 };
