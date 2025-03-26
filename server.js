@@ -16,7 +16,7 @@ const allowedOrigins = [
 
 // Enable CORS with specific origin (your frontend)
 const corsOptions = {
-  origin: "http://localhost:5173",  // Allow requests from this origin
+  origin: allowedOrigins,  // Allow requests from this origin
   methods: "GET,POST,PUT,DELETE",  // Allow these methods
   allowedHeaders: "Content-Type,Authorization",  // Allow these headers
 };
