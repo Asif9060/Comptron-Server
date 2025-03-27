@@ -1,5 +1,6 @@
 import express from "express";
 import Event from "../models/Event.js";
+import moment from "moment";
 
 const router = express.Router();
 
@@ -19,16 +20,19 @@ router.get("/event", async (req, res) => {
 router.post("/event", async (req, res) => {
   try {
     const { eventDate } = req.body;
+
+    const formattedDate = moment(eventDate).format("MMMM D, YYYY, h:mm A");
+
     let event = await Event.findOne();
 
     if (event) {
-      event.eventDate = eventDate;
+      event.eventDate = formattedDate;
     } else {
-      event = new Event({ eventDate });
+      event = new Event({  eventDate: formattedDate  });
     }
 
     await event.save();
-    res.json({ message: "Event updated", eventDate });
+    res.json({ message: "Event updated", eventDate: formattedDate });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
