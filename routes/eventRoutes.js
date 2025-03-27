@@ -4,6 +4,17 @@ import moment from "moment";
 
 const router = express.Router();
 
+router.get("/event", async (req, res) => {
+  try {
+    const event = await Event.findOne();
+    if (!event) return res.status(404).json({ message: "No event found" });
+
+    res.json({ eventDate: event.eventDate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post("/event", async (req, res) => {
   try {
     console.log("Received request body:", req.body); // Debugging
