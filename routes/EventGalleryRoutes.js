@@ -1,6 +1,8 @@
-const express = require("express");
-const multer = require("multer");
-const Event = require("../models/EventGallery.js");
+
+import express from "express";
+import multer from "multer";
+import Event from "../models/EventGallery.js";
+
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -44,4 +46,4 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
