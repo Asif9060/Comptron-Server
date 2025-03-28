@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import memberRoutes from "./routes/memberRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js"
 import newsRoutes from './routes/newsRoutes.js';
-import EventGalleryRoutes from "./routes/EventGalleryRoutes.js";
 
 
 dotenv.config();  // Load environment variables from .env file
@@ -38,7 +37,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/members", memberRoutes);
 app.use("/api", eventRoutes);
 app.use('/api/news', newsRoutes); 
-app.use("/api/eventGallery", EventGalleryRoutes);
+
 
 // MongoDB Connection
 const mongoURI = process.env.MONGO_URI;
