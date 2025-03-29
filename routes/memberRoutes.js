@@ -51,20 +51,20 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 });
 
 
-router.delete("/:id", async (req, res) => {
-    const { id } = req.params;
+// router.delete("/:id", async (req, res) => {
+//     const { id } = req.params;
 
-    try {
-        const deletedMember = await Member.findByIdAndDelete(id); // Assuming you're using Mongoose
-        if (!deletedMember) {
-            return res.status(404).json({ message: "Member not found" });
-        }
-        res.status(200).json({ message: "Member deleted successfully", deletedMember });
-    } catch (error) {
-        console.error("Error deleting member:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-});
+//     try {
+//         const deletedMember = await Member.findByIdAndDelete(id); // Assuming you're using Mongoose
+//         if (!deletedMember) {
+//             return res.status(404).json({ message: "Member not found" });
+//         }
+//         res.status(200).json({ message: "Member deleted successfully", deletedMember });
+//     } catch (error) {
+//         console.error("Error deleting member:", error);
+//         res.status(500).json({ message: "Server error" });
+//     }
+// });
 
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
