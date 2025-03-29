@@ -2,6 +2,7 @@ import express from "express";
 import createMember from "../controllers/memberController.js";  // Using import here
 import upload from "../middleware/upload.js";  // Using import here
 import Member from "../models/Member.js";
+import DeletedMember from "../models/DeletedMember.js";
 
 const router = express.Router();
 
@@ -61,6 +62,35 @@ router.delete("/:id", async (req, res) => {
         res.status(200).json({ message: "Member deleted successfully", deletedMember });
     } catch (error) {
         console.error("Error deleting member:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const memberToDelete = await Member.findById(id);
+        if (!memberToDelete) {
+            return res.status(404).json({ message: "Member not found" });
+        }
+
+        // Move to deleted members collection
+        const deletedMember = new DeletedMember({
+            name: memberToDelete.name,
+            role: memberToDelete.role,
+            email: memberToDelete.email,
+            bio: memberToDelete.bio,
+            socials: memberToDelete.socials,
+            image: memberToDelete.image
+        });
+
+        await deletedMember.save(); // Save to DeletedMembers collection
+        await Member.findByIdAndDelete(id); // Delete from main collection
+
+        res.status(200).json({ message: "Member archived successfully", deletedMember });
+    } catch (error) {
+        console.error("Error archiving member:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
