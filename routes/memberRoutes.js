@@ -1,17 +1,17 @@
 import express from "express";
-import createMember from "../controllers/memberController.js";  // Using import here
-import upload from "../middleware/upload.js";  // Using import here
+import createMember from "../controllers/memberController.js";  
+import upload from "../middleware/upload.js";  
 import Member from "../models/Member.js";
 import DeletedMember from "../models/DeletedMember.js";
 
 const router = express.Router();
 
-// POST route for creating a member with image upload
+
 router.post("/", upload.single("image"), createMember); 
 
 router.get("/", async (req, res) => {
     try {
-        const members = await Member.find(); // Fetch all members from the DB
+        const members = await Member.find(); 
         res.status(200).json(members);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -24,16 +24,16 @@ router.put("/:id", upload.single("image"), async (req, res) => {
         const { name, role, email, bio, socials } = req.body;
         const memberId = req.params.id;
 
-        // Find member by ID
+       
         const existingMember = await Member.findById(memberId);
         if (!existingMember) {
             return res.status(404).json({ message: "Member not found" });
         }
 
-        // Handle optional image upload
+        
         const imageUrl = req.file ? `/uploads/${req.file.filename}` : existingMember.image;
 
-        // Update member data
+        
         existingMember.name = name || existingMember.name;
         existingMember.role = role || existingMember.role;
         existingMember.email = email || existingMember.email;
@@ -41,7 +41,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
         existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
         existingMember.image = imageUrl;
 
-        await existingMember.save(); // Save updated member to DB
+        await existingMember.save(); 
 
         res.status(200).json(existingMember);
     } catch (error) {
@@ -85,8 +85,8 @@ router.delete("/:id", async (req, res) => {
             image: memberToDelete.image
         });
 
-        await deletedMember.save(); // Save to DeletedMembers collection
-        await Member.findByIdAndDelete(id); // Delete from main collection
+        await deletedMember.save(); 
+        await Member.findByIdAndDelete(id); 
 
         res.status(200).json({ message: "Member archived successfully", deletedMember });
     } catch (error) {
@@ -95,4 +95,4 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-export default router;  // Use export default to export the router
+export default router; 
