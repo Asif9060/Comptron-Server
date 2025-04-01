@@ -13,33 +13,32 @@ import bodyParser from "body-parser";
 
 
 
-dotenv.config();  // Load environment variables from .env file
+dotenv.config(); 
 
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:5173",  // For local development
-  "https://comptron.vercel.app" // Allow requests from your deployed frontend
+  "http://localhost:5173",  
+  "https://comptron.vercel.app" 
 ];
 
-// Enable CORS with specific origin (your frontend)
+
 const corsOptions = {
-  origin: allowedOrigins,  // Allow requests from this origin
-  methods: "GET,POST,PUT,DELETE",  // Allow these methods
-  allowedHeaders: "Content-Type,Authorization",  // Allow these headers
+  origin: allowedOrigins,  
+  methods: "GET,POST,PUT,DELETE", 
+  allowedHeaders: "Content-Type,Authorization",  
 };
 
-app.use(cors(corsOptions));  // Apply CORS middleware with the specified options
+app.use(cors(corsOptions));  
 
-// Middleware to parse JSON request bodies
+
 // app.use(express.json());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Serve static files from the "uploads" folder (where images are stored)
-// app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 app.use("/uploads", express.static("uploads"));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -50,7 +49,7 @@ app.use('/api/eventImages', RecentRoutes);
 app.use('/api/eventDetails', EventDetailsRoutes);
 
 
-// MongoDB Connection
+
 const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI)
   .then(() => {
@@ -60,9 +59,9 @@ mongoose.connect(mongoURI)
     console.error("MongoDB connection error:", err);
   });
 
-// Member routes
 
-// Start the server
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
