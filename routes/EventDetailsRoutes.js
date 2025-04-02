@@ -8,6 +8,23 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+router.put("/eventDetails/update/:id", async (req, res) => {
+  try {
+    const { title, description, date, mainImage, galleryImages } = req.body;
+    const updatedEvent = await Event.findByIdAndUpdate(
+      req.params.id,
+      { title, description, date, mainImage, galleryImages },
+      { new: true }
+    );
+
+    if (!updatedEvent) return res.status(404).json({ message: "Event not found" });
+
+    res.json(updatedEvent);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating event", error });
+  }
+});
+
 // Create a new event
 router.post("/create", upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "galleryImages", maxCount: 5 }]), async (req, res) => {
   try {
