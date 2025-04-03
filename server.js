@@ -9,6 +9,7 @@ import newsRoutes from './routes/newsRoutes.js';
 import RecentRoutes from "./routes/RecentRoutes.js";
 import EventDetailsRoutes from "./routes/EventDetailsRoutes.js"
 import bodyParser from "body-parser";
+import commentRoutes from "./routes/comments.js";
 
 
 
@@ -47,6 +48,7 @@ app.use("/api", eventRoutes);
 app.use('/api/news', newsRoutes); 
 app.use('/api/eventImages', RecentRoutes);
 app.use('/api/eventDetails', EventDetailsRoutes);
+app.use("/api/comments", commentRoutes);
 
 
 
