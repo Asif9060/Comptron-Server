@@ -22,8 +22,8 @@ router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, role, socials } = req.body;
 
-    if (!name || !role || !email) {
-      return res.status(400).json({ message: "Name, role, and email are required." });
+    if (!name || !role) {
+      return res.status(400).json({ message: "Name and role are required." });
     }
 
     const imageBase64 = req.file
