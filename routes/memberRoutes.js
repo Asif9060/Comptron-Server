@@ -20,7 +20,7 @@ const getImageBase64 = (file) => {
 // Create a new member
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, bio, socials } = req.body;
+    const { name, role, socials } = req.body;
 
     if (!name || !role || !email) {
       return res.status(400).json({ message: "Name, role, and email are required." });
@@ -33,8 +33,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     const newMember = new Member({
       name,
       role,
-      email,
-      bio,
       socials: socials ? JSON.parse(socials) : [],
       image: imageBase64, // Store the base64 image
     });
@@ -70,7 +68,7 @@ router.get("/:id", async (req, res) => {
 // Update a member by ID
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, bio, socials } = req.body;
+    const { name, role, socials } = req.body;
     const memberId = req.params.id;
 
     const existingMember = await Member.findById(memberId);
@@ -85,8 +83,8 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
     existingMember.name = name || existingMember.name;
     existingMember.role = role || existingMember.role;
-    existingMember.email = email || existingMember.email;
-    existingMember.bio = bio || existingMember.bio;
+    // existingMember.email = email || existingMember.email;
+    // existingMember.bio = bio || existingMember.bio;
     existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
     existingMember.image = imageBase64; // Store base64 image
 
@@ -111,8 +109,8 @@ router.delete("/:id", async (req, res) => {
     const deletedMember = new DeletedMember({
       name: memberToDelete.name,
       role: memberToDelete.role,
-      email: memberToDelete.email,
-      bio: memberToDelete.bio,
+      // email: memberToDelete.email,
+      // bio: memberToDelete.bio,
       socials: memberToDelete.socials,
       image: memberToDelete.image,
     });

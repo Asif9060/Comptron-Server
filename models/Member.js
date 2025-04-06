@@ -3,9 +3,9 @@ import mongoose from "mongoose";  // Use import for ES modules
 const memberSchema = new mongoose.Schema({
   name: String,
   role: String,
-  email: String,
+  //email: String,
   image: String, // URL or base64
-  bio: String,
+  // bio: String,
   socials: {
     github: String,
     linkedin: String
