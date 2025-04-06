@@ -40,6 +40,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     await newMember.save();
     res.status(201).json(newMember);
   } catch (error) {
+    console.error("Error creating member:", error);
     res.status(500).json({ message: "Error creating member", error });
   }
 });
