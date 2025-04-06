@@ -4,12 +4,11 @@ import Event from "../models/DetailedEvent.js";
 
 const router = express.Router();
 
-// Multer storage setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Create a new event
-router.post("/create", upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "galleryImages", maxCount: 5 }]), async (req, res) => {
+
+router.post("/create", upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "galleryImages", maxCount: 6 }]), async (req, res) => {
   try {
     const { title, description } = req.body;
 
@@ -34,7 +33,6 @@ router.post("/create", upload.fields([{ name: "mainImage", maxCount: 1 }, { name
   }
 });
 
-// Get all events
 router.get("/", async (req, res) => {
   try {
     const events = await Event.find();
@@ -44,7 +42,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get single event by ID
 router.get("/:id", async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -55,7 +52,38 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Delete event by ID
+router.put(
+  "/:id",
+  upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "galleryImages", maxCount: 6 }]),
+  async (req, res) => {
+    try {
+      const { title, description } = req.body;
+      const updates = {};
+
+      if (title) updates.title = title;
+      if (description) updates.description = description;
+
+      if (req.files["mainImage"]) {
+        updates.mainImage = `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`;
+      }
+
+      if (req.files["galleryImages"]) {
+        updates.galleryImages = req.files["galleryImages"].map(file =>
+          `data:image/png;base64,${file.buffer.toString("base64")}`
+        );
+      }
+
+      const updatedEvent = await Event.findByIdAndUpdate(req.params.id, updates, { new: true });
+
+      if (!updatedEvent) return res.status(404).json({ message: "Event not found" });
+
+      res.status(200).json({ message: "Event updated successfully", updatedEvent });
+    } catch (error) {
+      res.status(500).json({ message: "Error updating event", error });
+    }
+  }
+);
+
 router.delete("/:id", async (req, res) => {
   try {
     const event = await Event.findByIdAndDelete(req.params.id);

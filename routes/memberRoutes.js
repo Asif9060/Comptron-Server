@@ -10,14 +10,14 @@ const upload = multer({ storage });
 
 const router = express.Router();
 
-// Function to get the MIME type of the file and build the base64 string
+
 const getImageBase64 = (file) => {
-  const mimeType = file.mimetype; // Get MIME type (e.g., image/png, image/jpeg)
-  const base64Data = file.buffer.toString("base64"); // Convert file buffer to base64
-  return `data:${mimeType};base64,${base64Data}`; // Build the data URI
+  const mimeType = file.mimetype; 
+  const base64Data = file.buffer.toString("base64"); 
+  return `data:${mimeType};base64,${base64Data}`; 
 };
 
-// Create a new member
+
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, role, socials } = req.body;
@@ -27,14 +27,14 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 
     const imageBase64 = req.file
-      ? getImageBase64(req.file) // Use the helper function to get the base64 string
+      ? getImageBase64(req.file) 
       : null;
 
     const newMember = new Member({
       name,
       role,
       socials: socials ? JSON.parse(socials) : [],
-      image: imageBase64, // Store the base64 image
+      image: imageBase64, 
     });
 
     await newMember.save();
@@ -45,7 +45,6 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// Get all members
 router.get("/", async (req, res) => {
   try {
     const members = await Member.find();
@@ -55,7 +54,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a single member by ID
+
 router.get("/:id", async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
@@ -66,7 +65,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update a member by ID
+
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, role, socials } = req.body;
@@ -77,9 +76,9 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    let imageBase64 = existingMember.image; // Retain existing image if no new image uploaded
+    let imageBase64 = existingMember.image; 
     if (req.file) {
-      imageBase64 = getImageBase64(req.file); // Convert the new image to base64
+      imageBase64 = getImageBase64(req.file);
     }
 
     existingMember.name = name || existingMember.name;
@@ -96,7 +95,6 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   }
 });
 
-// Delete a member by ID
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -106,7 +104,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    // Move member to deleted members collection
+    
     const deletedMember = new DeletedMember({
       name: memberToDelete.name,
       role: memberToDelete.role,
@@ -116,8 +114,8 @@ router.delete("/:id", async (req, res) => {
       image: memberToDelete.image,
     });
 
-    await deletedMember.save(); // Save the deleted member in the DeletedMember collection
-    await Member.findByIdAndDelete(id); // Delete from the Member collection
+    await deletedMember.save(); 
+    await Member.findByIdAndDelete(id);
 
     res.status(200).json({ message: "Member archived successfully", deletedMember });
   } catch (error) {
