@@ -11,9 +11,7 @@ import RecentRoutes from "./routes/RecentRoutes.js";
 import EventDetailsRoutes from "./routes/EventDetailsRoutes.js"
 import bodyParser from "body-parser";
 import commentRoutes from "./routes/comments.js";
-
-
-
+import otpRoutes from "./routes/otpRoutes.js";
 
 dotenv.config(); 
 
@@ -50,6 +48,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/eventImages', RecentRoutes);
 app.use('/api/eventDetails', EventDetailsRoutes);
 app.use("/api/comments", commentRoutes);
+app.use('/api', otpRoutes);
 
 
 
@@ -61,75 +60,6 @@ mongoose.connect(mongoURI)
   .catch((err) => {
     console.error("MongoDB connection error:", err);
   });
-
-
-  // OTP verification
-
-  const otpSchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    otp: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now, expires: 300 } // 5 minutes TTL
-  });
-  
-  const OTP = mongoose.model('OTP', otpSchema);
-  
-  // Nodemailer Setup
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-  
-  // Generate OTP
-  const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // API: Send OTP
-  app.post('/api/send-otp', async (req, res) => {
-    const { email } = req.body;
-  
-    const otp = generateOTP();
-  
-    // Save OTP in database
-    await OTP.create({ email, otp });
-  
-    // Send OTP email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Your OTP Code',
-      text: `Your OTP code is ${otp}. It is valid for 5 minutes.`,
-    };
-  
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).json({ message: 'Failed to send OTP' });
-      } else {
-        console.log('Email sent: ' + info.response);
-        res.status(200).json({ message: 'OTP sent successfully' });
-      }
-    });
-  });
-  
-  // API: Verify OTP
-  app.post('/api/verify-otp', async (req, res) => {
-    const { email, otp } = req.body;
-  
-    const otpRecord = await OTP.findOne({ email, otp });
-  
-    if (!otpRecord) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
-  
-    // Success: Delete OTP
-    await OTP.deleteOne({ _id: otpRecord._id });
-  
-    res.status(200).json({ message: 'OTP verified successfully' });
-  });
-
-
 
 
 const PORT = process.env.PORT || 5000;
