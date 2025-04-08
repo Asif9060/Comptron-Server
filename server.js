@@ -12,6 +12,7 @@ import EventDetailsRoutes from "./routes/EventDetailsRoutes.js"
 import bodyParser from "body-parser";
 import commentRoutes from "./routes/comments.js";
 import otpRoutes from "./routes/otpRoutes.js";
+import auth from "./routes/auth.js";
 
 dotenv.config(); 
 
@@ -49,6 +50,7 @@ app.use('/api/eventImages', RecentRoutes);
 app.use('/api/eventDetails', EventDetailsRoutes);
 app.use("/api/comments", commentRoutes);
 app.use('/api', otpRoutes);
+app.use('/api', auth);
 
 
 
