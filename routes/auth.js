@@ -11,10 +11,10 @@ router.post('/register-member', async (req, res) => {
     const { name, email, roll, phone, password, otp } = req.body;
 
     // Verify OTP first
-    const otpRecord = await OTP.findOne({ email, otp });
-    if (!otpRecord) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
+    // const otpRecord = await OTP.findOne({ email, otp });
+    // if (!otpRecord) {
+    //   return res.status(400).json({ message: 'Invalid or expired OTP' });
+    // }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
