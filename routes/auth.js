@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 const router = express.Router();
 
 // Signup with OTP Verification
-router.post('/signup', async (req, res) => {
+router.post('/register-member', async (req, res) => {
   try {
     const { name, email, roll, phone, password, otp } = req.body;
 
