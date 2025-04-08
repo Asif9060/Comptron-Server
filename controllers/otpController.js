@@ -14,11 +14,11 @@ export const sendOTP = async (req, res) => {
     await OTP.create({ email, otp });
     await sendOTPEmail(email, otp);
 
-    res.status(200).json({ message: 'OTP sent successfully' });
+    res.status(200).json({ success: true, message: 'OTP sent successfully' });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to send OTP' });
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 };
 
