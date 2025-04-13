@@ -51,6 +51,32 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+router.put("/profile/:id", async (req, res) => {
+  try {
+    const { name, email, phone, skills, image } = req.body;;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        email,
+        phone,
+        skills,
+        image,
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get("/", async (req, res) => {
     try {
       const users = await User.find(); // Fetch all users
