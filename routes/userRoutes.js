@@ -17,7 +17,7 @@ const generateUniqueId = async () => {
   return `CM${year}-${randomDigits}`;
 };
 
-// REGISTER ROUTErouter.post("/register", async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, skills, image } = req.body; // <-- added image
 
