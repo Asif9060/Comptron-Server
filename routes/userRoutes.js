@@ -1,13 +1,12 @@
 import express from "express";
-import User from "../models/User.js"; // your mongoose model
+import User from "../models/User.js";
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
 const generateUniqueId = async () => {
   const year = new Date().getFullYear();
-  let randomDigits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+  let randomDigits = Math.floor(1000 + Math.random() * 9000);
 
-  // Ensure no duplicate IDs (optional but good practice)
   let existingUser = await User.findOne({ customId: `CM${year}-${randomDigits}` });
   while (existingUser) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
@@ -19,9 +18,9 @@ const generateUniqueId = async () => {
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills, image } = req.body; // <-- added image
+    const { name, email, phone, skills, image } = req.body;
 
-    const customId = await generateUniqueId(); // Generate the ID
+    const customId = await generateUniqueId();
 
     const newUser = new User({
       name,
@@ -29,17 +28,17 @@ router.post("/register", async (req, res) => {
       phone,
       skills,
       customId,
-      image, // <-- store base64 image here
+      image,
     });
 
     await newUser.save();
-    res.status(201).json(newUser); // Return the created user
+    res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET USER PROFILE BY ID
+// GET USER PROFILE BY customId
 router.get("/profile/:id", async (req, res) => {
   try {
     const user = await User.findOne({ customId: req.params.id });
@@ -51,6 +50,7 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+// UPDATE USER PROFILE BY customId
 router.put("/profile/:id", async (req, res) => {
   try {
     const { name, skills, email, phone, image } = req.body;
@@ -60,17 +60,21 @@ router.put("/profile/:id", async (req, res) => {
       return res.status(400).json({ message: "Name and email are required" });
     }
 
-    // Validate image size (optional, e.g., max 5MB as base64)
-    if (image && image.length > 7 * 1024 * 1024) { // ~5MB after base64 encoding
+    // Validate image size (max 5MB as base64)
+    if (image && image.length > 7 * 1024 * 1024) {
       return res.status(400).json({ message: "Image size exceeds 5MB" });
     }
 
     const updateData = { name, skills, email, phone, image };
 
-    const user = await User.findByIdAndUpdate({customId: req.params.id}, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const user = await User.findOneAndUpdate(
+      { customId: req.params.id },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -81,13 +85,14 @@ router.put("/profile/:id", async (req, res) => {
   }
 });
 
+// GET ALL USERS
 router.get("/", async (req, res) => {
-    try {
-      const users = await User.find(); // Fetch all users
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching users", error });
-    }
-  });
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching users", error });
+  }
+});
 
 export default router;
