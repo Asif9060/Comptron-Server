@@ -17,10 +17,9 @@ const generateUniqueId = async () => {
   return `CM${year}-${randomDigits}`;
 };
 
-// REGISTER ROUTE
-router.post("/register", async (req, res) => {
+// REGISTER ROUTErouter.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills } = req.body;
+    const { name, email, phone, skills, image } = req.body; // <-- added image
 
     const customId = await generateUniqueId(); // Generate the ID
 
@@ -30,6 +29,7 @@ router.post("/register", async (req, res) => {
       phone,
       skills,
       customId,
+      image, // <-- store base64 image here
     });
 
     await newUser.save();
