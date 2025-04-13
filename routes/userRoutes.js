@@ -17,48 +17,23 @@ const generateUniqueId = async () => {
   return `CM${year}-${randomDigits}`;
 };
 
-router.post("/register", upload.single("image"), async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills } = req.body;
-    const imageBase64 = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}` : null;
+    const { name, email, phone, skills, image } = req.body; // <-- added image
+
+    const customId = await generateUniqueId(); // Generate the ID
 
     const newUser = new User({
       name,
       email,
       phone,
       skills,
-      image: imageBase64, // Save image as base64
+      customId,
+      image, // <-- store base64 image here
     });
 
     await newUser.save();
     res.status(201).json(newUser); // Return the created user
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.put("/profile/:id", upload.single("image"), async (req, res) => {
-  try {
-    const { name, email, phone, skills } = req.body;
-    const imageBase64 = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}` : null;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        email,
-        phone,
-        skills,
-        image: imageBase64, // Update image as base64
-      },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
