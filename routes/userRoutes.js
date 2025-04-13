@@ -67,7 +67,7 @@ router.put("/profile/:id", async (req, res) => {
 
     const updateData = { name, skills, email, phone, image };
 
-    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
+    const user = await User.findByIdAndUpdate({customId: req.params.id}, updateData, {
       new: true,
       runValidators: true,
     });
