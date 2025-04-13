@@ -16,11 +16,14 @@ const generateUniqueId = async () => {
   return `CM${year}-${randomDigits}`;
 };
 
+// Register new user
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, skills, image } = req.body;
 
     const customId = await generateUniqueId();
+    const validityDate = new Date();
+    validityDate.setFullYear(validityDate.getFullYear() + 1); // Valid for 1 year
 
     const newUser = new User({
       name,
@@ -29,6 +32,7 @@ router.post("/register", async (req, res) => {
       skills,
       customId,
       image,
+      validityDate,
     });
 
     await newUser.save();
@@ -38,19 +42,21 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// GET USER PROFILE BY customId
+// Get user profile by customId
 router.get("/profile/:id", async (req, res) => {
   try {
     const user = await User.findOne({ customId: req.params.id });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json(user);
+    // Add isValid flag
+    const isValid = user.validityDate >= new Date();
+    res.json({ ...user.toObject(), isValid });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// UPDATE USER PROFILE BY customId
+// Update user profile by customId
 router.put("/profile/:id", async (req, res) => {
   try {
     const { name, skills, email, phone, image } = req.body;
@@ -65,7 +71,10 @@ router.put("/profile/:id", async (req, res) => {
       return res.status(400).json({ message: "Image size exceeds 5MB" });
     }
 
-    const updateData = { name, skills, email, phone, image };
+    const validityDate = new Date();
+    validityDate.setFullYear(validityDate.getFullYear() + 1); // Extend validity by 1 year
+
+    const updateData = { name, skills, email, phone, image, validityDate };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
@@ -78,18 +87,25 @@ router.put("/profile/:id", async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: err.message || "Failed to update profile" });
+    // Add isValid flag
+    const isValid = user.validityDate >= new Date();
+    res.json({ ...user.toObject(), isValid });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message || "Failed to update profile" });
   }
 });
 
-// GET ALL USERS
+// Get all users
 router.get("/", async (req, res) => {
   try {
     const users = await User.find();
-    res.json(users);
+    // Add isValid flag to each user
+    const usersWithValidity = users.map((user) => ({
+      ...user.toObject(),
+      isValid: user.validityDate >= new Date(),
+    }));
+    res.json(usersWithValidity);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error });
   }
