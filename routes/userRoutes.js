@@ -51,4 +51,13 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+    try {
+      const users = await User.find(); // Fetch all users
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users", error });
+    }
+  });
+
 export default router;
