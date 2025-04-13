@@ -50,7 +50,7 @@ app.use('/api/eventImages', RecentRoutes);
 app.use('/api/eventDetails', EventDetailsRoutes);
 app.use("/api/comments", commentRoutes);
 app.use('/api', authRoutes);
-app.use('/api', userRoutes);
+app.use('/api/users', userRoutes);
 
 
 
