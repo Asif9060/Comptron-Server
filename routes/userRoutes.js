@@ -8,13 +8,13 @@ const generateUniqueId = async () => {
   let randomDigits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
 
   // Ensure no duplicate IDs (optional but good practice)
-  let existingUser = await User.findOne({ customId: `CM${year}"-"${randomDigits}` });
+  let existingUser = await User.findOne({ customId: `CM${year}-${randomDigits}` });
   while (existingUser) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
-    existingUser = await User.findOne({ customId: `CM${year}"-"${randomDigits}` });
+    existingUser = await User.findOne({ customId: `CM${year}-${randomDigits}` });
   }
 
-  return `CM${year}${randomDigits}`;
+  return `CM${year}-${randomDigits}`;
 };
 
 // REGISTER ROUTE
