@@ -12,7 +12,15 @@ const UserSchema = new mongoose.Schema({
   image: {
     type: String,
   },
-  validityDate: { type: Date, required: true },
+  validityDate: { 
+    type: Date, 
+    required: true, 
+    default: () => {
+      const today = new Date();
+      today.setFullYear(today.getFullYear() + 1); // Add 1 year
+      return today;
+    }
+  },
 });
 
 const User = mongoose.model("User", UserSchema);
