@@ -13,7 +13,7 @@ const tempUserSchema = new mongoose.Schema({
     image: {
       type: String,
     },
-    validityDate: { type: Date, required: true },
+    validityDate: {type: Date},
   });
 
 export default mongoose.model('TempUser', tempUserSchema);
