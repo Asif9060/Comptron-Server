@@ -5,6 +5,7 @@ const tempUserSchema = new mongoose.Schema({
     email: String,
     phone: String,
     skills: String,
+    otp: { type: String, required: true },
     customId: {
       type: String,
       unique: true,
