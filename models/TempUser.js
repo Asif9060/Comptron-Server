@@ -6,7 +6,8 @@ const tempUserSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     password: { type: String, required: true },
     otp: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now, expires: 600 } // Expires in 10 minutes
+    createdAt: { type: Date, default: Date.now, expires: 600 },
+    validityDate: { type: Date, required: true },
 });
 
 export default mongoose.model('TempUser', tempUserSchema);
