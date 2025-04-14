@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   skills: String,
   customId: {
     type: String,
+    required: true,
     unique: true,
   },
   image: {
