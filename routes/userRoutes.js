@@ -19,7 +19,7 @@ const generateUniqueId = async () => {
 // Register new user
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills, image } = req.body;
+    const { name, email, phone, skills, image, password  } = req.body;
 
     const customId = await generateUniqueId();
     const validityDate = new Date();
@@ -32,6 +32,7 @@ router.post("/register", async (req, res) => {
       skills,
       customId,
       image,
+      password,
       validityDate,
     });
 
