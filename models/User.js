@@ -10,6 +10,10 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   image: {
     type: String,
   },
@@ -23,6 +27,23 @@ const UserSchema = new mongoose.Schema({
     }
   },
 });
+
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Method to check if password is correct
+userSchema.methods.matchPassword = async function(password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model("User", UserSchema);
 export default User;
