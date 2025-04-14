@@ -12,7 +12,6 @@ const UserSchema = new mongoose.Schema({
   image: {
     type: String,
   },
-  validityDate: { type: Date, required: true },
 });
 
 const User = mongoose.model("User", UserSchema);
