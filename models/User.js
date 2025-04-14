@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs";
 const UserSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -28,7 +28,7 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-userSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 
   try {
@@ -41,7 +41,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to check if password is correct
-userSchema.methods.matchPassword = async function(password) {
+UserSchema.methods.matchPassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
