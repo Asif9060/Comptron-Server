@@ -13,7 +13,15 @@ const tempUserSchema = new mongoose.Schema({
     image: {
       type: String,
     },
-    validityDate: {type: Date},
+    validityDate: { 
+      type: Date, 
+      required: true, 
+      default: () => {
+        const today = new Date();
+        today.setFullYear(today.getFullYear() + 1); // Add 1 year
+        return today;
+      }
+    },
   });
 
 export default mongoose.model('TempUser', tempUserSchema);
