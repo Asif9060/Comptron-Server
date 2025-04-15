@@ -16,7 +16,8 @@ router.post('/send-otp', async (req, res) => {
   await OTP.create({ email, code: otpCode });
 
   // Send OTP via email
-  await sendMail(email,  email,
+  await sendMail(
+    email,
     '🔐 Email Verification - Your OTP Code',
     `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
@@ -34,7 +35,8 @@ router.post('/send-otp', async (req, res) => {
         <p style="font-size: 12px; color: #777;">If you did not initiate this request, please ignore this email.</p>
         <p style="font-size: 12px; color: #777;">© ${new Date().getFullYear()} Comptron Club</p>
       </div>
-    `);
+    `
+  );
 
   res.status(200).json({ message: 'OTP sent to your email.' });
 });
