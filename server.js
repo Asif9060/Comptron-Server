@@ -13,7 +13,6 @@ import bodyParser from "body-parser";
 import commentRoutes from "./routes/comments.js";
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/auth.js';
-import admin from "firebase-admin";
 
 dotenv.config(); 
 
@@ -54,23 +53,7 @@ app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
 
 
-admin.initializeApp({
-  credential: admin.credential.cert(require("./firebaseServiceAccountKey.json")),
-});
 
-app.delete("/api/firebase/deleteUserByEmail", async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ message: "Email is required" });
-
-  try {
-    const user = await admin.auth().getUserByEmail(email);
-    await admin.auth().deleteUser(user.uid);
-    res.status(200).json({ message: "Firebase user deleted successfully" });
-  } catch (error) {
-    console.error("Firebase deletion error:", error);
-    res.status(500).json({ message: "Failed to delete Firebase user", error: error.message });
-  }
-});
 
 const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI)
