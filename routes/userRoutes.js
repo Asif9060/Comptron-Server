@@ -75,7 +75,7 @@ router.put("/profile/:id", async (req, res) => {
     const validityDate = new Date();
     validityDate.setFullYear(validityDate.getFullYear() + 1); // Extend validity by 1 year
 
-    const updateData = { name, skills, email, phone, image, validityDate };
+    const updateData = { name, skills, email, phone, image, validityDate,linkedIn, github, portfolio, cv };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },

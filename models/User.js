@@ -17,6 +17,10 @@ const UserSchema = new mongoose.Schema({
   image: {
     type: String,
   },
+  linkedIn: String,
+  github: String,
+  portfolio: String,
+  cv: String,
   validityDate: { 
     type: Date, 
     required: true, 
