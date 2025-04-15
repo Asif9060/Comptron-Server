@@ -10,7 +10,7 @@ router.post('/send-otp', async (req, res) => {
   const { email } = req.body;
 
   // Generate a 6-digit numeric OTP
-  const otpCode = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false });
+  const otpCode = otpGenerator.generate(6, {digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
 
   // Save OTP to the database
   await OTP.create({ email, code: otpCode });
