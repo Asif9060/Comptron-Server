@@ -30,6 +30,7 @@ const UserSchema = new mongoose.Schema({
       return today;
     }
   },
+  isValid: Boolean,
 });
 
 UserSchema.pre('save', async function(next) {

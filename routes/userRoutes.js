@@ -57,6 +57,28 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+router.put("/validate/:id", async (req, res) => {
+  try {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+    const user = await User.findOneAndUpdate(
+      { customId: req.params.id },
+      {
+        validityDate: oneYearFromNow,
+        isValid: true,
+      },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "Validation updated", user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 // Update user profile by customId
 router.put("/profile/:id", async (req, res) => {
   try {
