@@ -17,6 +17,11 @@ const UserSchema = new mongoose.Schema({
   image: {
     type: String,
   },
+  gender:   { 
+    type: String, 
+    enum: ["Male", "Female"],
+    required: true 
+  },
   linkedIn: String,
   github: String,
   portfolio: String,
