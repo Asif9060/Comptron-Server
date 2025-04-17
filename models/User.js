@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 const UserSchema = new mongoose.Schema({
-  firebaseUid: { type: String, required: true },
   name: String,
   email: String,
   phone: String,
