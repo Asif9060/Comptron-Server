@@ -1,6 +1,11 @@
 import mongoose from "mongoose";  // Use import for ES modules
 
 const memberSchema = new mongoose.Schema({
+  customId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   name: String,
   role: String,
   //email: String,
