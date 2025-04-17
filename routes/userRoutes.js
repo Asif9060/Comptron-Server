@@ -63,10 +63,14 @@ router.put("/validate/:id", async (req, res) => {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
+    // Generate new customId
+    const newCustomId = await generateUniqueId();
+
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
       {
         validityDate: oneYearFromNow,
+        customId: newCustomId,
         isValid: true,
       },
       { new: true }
@@ -74,7 +78,10 @@ router.put("/validate/:id", async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({ message: "Validation updated", user });
+    res.json({
+      message: "Validation updated and Custom ID changed",
+      user,
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
