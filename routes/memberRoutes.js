@@ -17,6 +17,18 @@ const getImageBase64 = (file) => {
   return `data:${mimeType};base64,${base64Data}`; 
 };
 
+const generateUniqueId = async () => {
+  const year = new Date().getFullYear();
+  let randomDigits = Math.floor(1000 + Math.random() * 9000);
+
+  let existingMember = await Member.findOne({ customId: `CGM${year}-${randomDigits}` });
+  while (existingMember) {
+    randomDigits = Math.floor(1000 + Math.random() * 9000);
+    existingMember = await Member.findOne({ customId: `CGM${year}-${randomDigits}` });
+  }
+
+  return `CGM${year}-${randomDigits}`;
+};
 
 router.post("/", upload.single("image"), async (req, res) => {
   try {
@@ -26,15 +38,18 @@ router.post("/", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "Name and role are required." });
     }
 
+    const customId = await generateUniqueId();
+
     const imageBase64 = req.file
       ? getImageBase64(req.file) 
       : null;
 
     const newMember = new Member({
+      customId,
       name,
       role,
       socials: socials ? JSON.parse(socials) : [],
-      image: imageBase64, 
+      image: imageBase64,
     });
 
     await newMember.save();
