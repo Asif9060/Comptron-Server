@@ -1,5 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
+import Event from "../models/Event.js";
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -187,6 +188,45 @@ router.delete("/delete/:id", async (req, res) => {
   } catch (error) {
     console.error("Delete error:", error);
     res.status(500).json({ message: "Failed to delete user account" });
+  }
+});
+
+router.get("/user-growth", async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      {
+        $project: {
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        },
+      },
+      {
+        $group: {
+          _id: "$date",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user growth data", error });
+  }
+});
+
+// Stats Route (Admin Only)
+router.get("/stats", async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ isValid: true });
+    const upcomingEvents = await Event.countDocuments({ date: { $gte: new Date() } });
+
+    res.json({
+      totalUsers,
+      activeUsers,
+      upcomingEvents,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching stats", error });
   }
 });
 
