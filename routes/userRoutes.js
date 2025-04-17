@@ -7,13 +7,13 @@ const generateUniqueId = async () => {
   const year = new Date().getFullYear();
   let randomDigits = Math.floor(1000 + Math.random() * 9000);
 
-  let existingUser = await User.findOne({ customId: `CM${year}-${randomDigits}` });
+  let existingUser = await User.findOne({ customId: `CGM${year}-${randomDigits}` });
   while (existingUser) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
-    existingUser = await User.findOne({ customId: `CM${year}-${randomDigits}` });
+    existingUser = await User.findOne({ customId: `CGM${year}-${randomDigits}` });
   }
 
-  return `CM${year}-${randomDigits}`;
+  return `CGM${year}-${randomDigits}`;
 };
 
 // Register new user
@@ -30,6 +30,7 @@ router.post("/register", async (req, res) => {
       email,
       phone,
       skills,
+      firebaseUserId,
       customId,
       gender,
       image,
