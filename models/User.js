@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
   email: String,
   phone: String,
   skills: String,
+  firebaseUserId: { type: String, required: true },
   customId: {
     type: String,
     required: true,
