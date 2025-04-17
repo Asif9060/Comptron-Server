@@ -84,7 +84,7 @@ router.put("/validate/:id", async (req, res) => {
 // Update user profile by customId
 router.put("/profile/:id", async (req, res) => {
   try {
-    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv } = req.body;
+    const { name, skills, email, phone, image, linkedIn, github, gender, firebaseUserId, portfolio, cv } = req.body;
 
     // Basic validation
     if (!name || !email) {
@@ -99,7 +99,7 @@ router.put("/profile/:id", async (req, res) => {
     // const validityDate = new Date();
     // validityDate.setFullYear(validityDate.getFullYear() + 1); // Extend validity by 1 year
 
-    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv };
+    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, firebaseUserId, portfolio, cv };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
