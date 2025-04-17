@@ -21,13 +21,13 @@ const generateUniqueId = async () => {
   const year = new Date().getFullYear();
   let randomDigits = Math.floor(1000 + Math.random() * 9000);
 
-  let existingMember = await Member.findOne({ customId: `CGM${year}-${randomDigits}` });
+  let existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
   while (existingMember) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
-    existingMember = await Member.findOne({ customId: `CGM${year}-${randomDigits}` });
+    existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
   }
 
-  return `CGM${year}-${randomDigits}`;
+  return `CCM${year}-${randomDigits}`;
 };
 
 router.post("/", upload.single("image"), async (req, res) => {
