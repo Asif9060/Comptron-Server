@@ -58,6 +58,29 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv } = req.body;
+
+    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv };
+
+    const user = await User.findOneAndUpdate(
+      { customId: req.params.id },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isValid = user.validityDate >= new Date();
+    res.json({ ...user.toObject(), isValid });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message || "Failed to update profile" });
+  }
+});
+
+
 router.put("/validate/:id", async (req, res) => {
   try {
     const oneYearFromNow = new Date();
