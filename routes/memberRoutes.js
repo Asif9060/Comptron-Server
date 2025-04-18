@@ -4,52 +4,51 @@ import path from "path";
 import Member from "../models/Member.js";
 import DeletedMember from "../models/DeletedMember.js";
 
-// Multer storage setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const router = express.Router();
 
-
 const getImageBase64 = (file) => {
-  const mimeType = file.mimetype; 
-  const base64Data = file.buffer.toString("base64"); 
-  return `data:${mimeType};base64,${base64Data}`; 
+  const mimeType = file.mimetype;
+  const base64Data = file.buffer.toString("base64");
+  return `data:${mimeType};base64,${base64Data}`;
 };
 
 const generateUniqueId = async () => {
   const year = new Date().getFullYear();
   let randomDigits = Math.floor(1000 + Math.random() * 9000);
-
   let existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
   while (existingMember) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
     existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
   }
-
   return `CCM${year}-${randomDigits}`;
 };
 
+// Create Member
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, socials } = req.body;
+    const { name, role, email, phone, skill, socials, validityDate, isValid } = req.body;
 
     if (!name || !role) {
       return res.status(400).json({ message: "Name and role are required." });
     }
 
     const customId = await generateUniqueId();
-
-    const imageBase64 = req.file
-      ? getImageBase64(req.file) 
-      : null;
+    const imageBase64 = req.file ? getImageBase64(req.file) : null;
 
     const newMember = new Member({
       customId,
       name,
       role,
-      socials: socials ? JSON.parse(socials) : [],
+      email,
+      phone,
+      skill,
       image: imageBase64,
+      validityDate,
+      isValid: isValid === "true" || isValid === true,
+      socials: socials ? JSON.parse(socials) : [],
     });
 
     await newMember.save();
@@ -69,7 +68,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 router.get("/:id", async (req, res) => {
   try {
     const member = await Member.findOne({ customId: req.params.id });
@@ -80,10 +78,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, socials } = req.body;
+    const { name, role, email, phone, skill, socials, validityDate, isValid } = req.body;
     const memberId = req.params.id;
 
     const existingMember = await Member.findById(memberId);
@@ -91,17 +88,20 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    let imageBase64 = existingMember.image; 
+    let imageBase64 = existingMember.image;
     if (req.file) {
       imageBase64 = getImageBase64(req.file);
     }
 
     existingMember.name = name || existingMember.name;
     existingMember.role = role || existingMember.role;
-    // existingMember.email = email || existingMember.email;
-    // existingMember.bio = bio || existingMember.bio;
+    existingMember.email = email || existingMember.email;
+    existingMember.phone = phone || existingMember.phone;
+    existingMember.skill = skill || existingMember.skill;
+    existingMember.validityDate = validityDate || existingMember.validityDate;
+    existingMember.isValid = isValid !== undefined ? isValid === "true" || isValid === true : existingMember.isValid;
     existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
-    existingMember.image = imageBase64; // Store base64 image
+    existingMember.image = imageBase64;
 
     await existingMember.save();
     res.status(200).json(existingMember);
@@ -112,24 +112,25 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
-
   try {
     const memberToDelete = await Member.findById(id);
     if (!memberToDelete) {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    
     const deletedMember = new DeletedMember({
       name: memberToDelete.name,
       role: memberToDelete.role,
-      // email: memberToDelete.email,
-      // bio: memberToDelete.bio,
-      socials: memberToDelete.socials,
+      email: memberToDelete.email,
+      phone: memberToDelete.phone,
+      skill: memberToDelete.skill,
       image: memberToDelete.image,
+      validityDate: memberToDelete.validityDate,
+      isValid: memberToDelete.isValid,
+      socials: memberToDelete.socials,
     });
 
-    await deletedMember.save(); 
+    await deletedMember.save();
     await Member.findByIdAndDelete(id);
 
     res.status(200).json({ message: "Member archived successfully", deletedMember });
@@ -139,6 +140,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+
 
 
 
