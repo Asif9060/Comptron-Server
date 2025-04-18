@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import Event from "../models/DetailedEvent.js";
-
+import moment from "moment-timezone";
 const router = express.Router();
 
 const storage = multer.memoryStorage();
@@ -34,13 +34,13 @@ router.post(
             (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
           )
         : [];
-
+        const dateTime = moment.tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka").toDate();
       const newEvent = new Event({
         title,
         description,
         date,
         time,
-        dateTime: new Date(`${date}T${time}`),
+        dateTime,
         mainImage,
         galleryImages,
       });
@@ -87,7 +87,9 @@ router.put(
 
       if (title) updates.title = title;
       if (description) updates.description = description;
-      if (date && time) updates.dateTime = new Date(`${date}T${time}`);
+      if (date && time) {
+        updates.dateTime = moment.tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka").toDate();
+      }
 
       if (req.files["mainImage"]) {
         updates.mainImage = `data:image/png;base64,${req.files[
