@@ -83,7 +83,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     const { name, role, email, phone, skills, socials, validityDate, isValid } = req.body;
     const memberId = req.params.id;
 
-    const existingMember = await Member.findById(memberId);
+    const existingMember = await Member.findOne({ customId: memberId }); // FIXED this line
     if (!existingMember) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -97,7 +97,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     existingMember.role = role || existingMember.role;
     existingMember.email = email || existingMember.email;
     existingMember.phone = phone || existingMember.phone;
-    existingMember.skills = skill || existingMember.skill;
+    existingMember.skills = skills || existingMember.skills; // FIXED typo here
     existingMember.validityDate = validityDate || existingMember.validityDate;
     existingMember.isValid = isValid !== undefined ? isValid === "true" || isValid === true : existingMember.isValid;
     existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
@@ -106,14 +106,16 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     await existingMember.save();
     res.status(200).json(existingMember);
   } catch (error) {
+    console.error("Error updating member:", error); // <-- helpful for debugging!
     res.status(500).json({ message: "Error updating member", error });
   }
 });
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
+
   try {
-    const memberToDelete = await Member.findById(id);
+    const memberToDelete = await Member.findOne({ customId: id }); // FIXED
     if (!memberToDelete) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -131,10 +133,11 @@ router.delete("/:id", async (req, res) => {
     });
 
     await deletedMember.save();
-    await Member.findByIdAndDelete(id);
+    await Member.deleteOne({ customId: id }); // FIXED
 
     res.status(200).json({ message: "Member archived successfully", deletedMember });
   } catch (error) {
+    console.error("Error archiving member:", error); // helpful log
     res.status(500).json({ message: "Error archiving member", error });
   }
 });
