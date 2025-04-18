@@ -72,7 +72,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const member = await Member.findById({ customId: req.params.id });
+    const member = await Member.findOne({ customId: req.params.id });
     if (!member) return res.status(404).json({ message: "Member not found" });
     res.status(200).json(member);
   } catch (error) {
