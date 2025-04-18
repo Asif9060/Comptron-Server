@@ -148,7 +148,7 @@ router.get('/:id', async (req, res) => {
   res.json(member);
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/validity/:id', async (req, res) => {
   const { isValid, validityDate } = req.body;
   const member = await Member.findOneAndUpdate(
     { customId: req.params.id },
