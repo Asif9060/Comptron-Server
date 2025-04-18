@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import Event from "../models/DetailedEvent.js";
-
+import moment from "moment";
 const router = express.Router();
 
 const storage = multer.memoryStorage();
@@ -34,13 +34,14 @@ router.post(
             (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
           )
         : [];
+      const dateTime = moment(`${date} ${time}`, "YYYY-MM-DD hh:mm A").toDate();
 
       const newEvent = new Event({
         title,
         description,
         date,
         time,
-        dateTime: new Date(`${date}T${time}`),
+        dateTime,
         mainImage,
         galleryImages,
       });
@@ -62,7 +63,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Error fetching events", error });
   }
 });
-
 
 router.get("/:id", async (req, res) => {
   try {
