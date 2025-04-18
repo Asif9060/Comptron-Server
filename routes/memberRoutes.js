@@ -29,7 +29,7 @@ const generateUniqueId = async () => {
 // Create Member
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, phone, skill, socials, validityDate, isValid } = req.body;
+    const { name, role, email, phone, skills, socials, validityDate, isValid } = req.body;
 
     if (!name || !role) {
       return res.status(400).json({ message: "Name and role are required." });
@@ -44,7 +44,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       role,
       email,
       phone,
-      skill,
+      skills,
       image: imageBase64,
       validityDate,
       isValid: isValid === "true" || isValid === true,
@@ -80,7 +80,7 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, phone, skill, socials, validityDate, isValid } = req.body;
+    const { name, role, email, phone, skills, socials, validityDate, isValid } = req.body;
     const memberId = req.params.id;
 
     const existingMember = await Member.findById(memberId);
@@ -97,7 +97,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     existingMember.role = role || existingMember.role;
     existingMember.email = email || existingMember.email;
     existingMember.phone = phone || existingMember.phone;
-    existingMember.skill = skill || existingMember.skill;
+    existingMember.skills = skill || existingMember.skill;
     existingMember.validityDate = validityDate || existingMember.validityDate;
     existingMember.isValid = isValid !== undefined ? isValid === "true" || isValid === true : existingMember.isValid;
     existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
@@ -123,7 +123,7 @@ router.delete("/:id", async (req, res) => {
       role: memberToDelete.role,
       email: memberToDelete.email,
       phone: memberToDelete.phone,
-      skill: memberToDelete.skill,
+      skills: memberToDelete.skills,
       image: memberToDelete.image,
       validityDate: memberToDelete.validityDate,
       isValid: memberToDelete.isValid,
