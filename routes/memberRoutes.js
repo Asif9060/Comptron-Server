@@ -142,6 +142,24 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.get('/committee/:customId', async (req, res) => {
+  const member = await Member.findOne({ customId: req.params.customId }); // ✅ FIXED
+  if (!member) return res.status(404).json({ error: 'Member not found' });
+  res.json(member);
+});
+
+router.put('/committee/:customId', async (req, res) => {
+  const { isValid, validityDate } = req.body;
+  const member = await Member.findOneAndUpdate(  // ✅ FIXED
+    { customId: req.params.customId },
+    { isValid, validityDate },
+    { new: true }
+  );
+  if (!member) return res.status(404).json({ error: 'Member not found' });
+  res.json(member);
+});
+
+
 export default router;
 
 
