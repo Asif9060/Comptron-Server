@@ -17,33 +17,36 @@ router.get("/event", async (req, res) => {
 
 router.post("/event", async (req, res) => {
   try {
-    console.log("Received request body:", req.body); // Debugging
+    console.log("Received request body:", req.body);
 
-    const { eventDate } = req.body;
-    if (!eventDate) {
-      console.error("Error: eventDate is missing from request.");
-      return res.status(400).json({ error: "Event date is required" });
+    const { eventDate, eventName } = req.body;
+
+    if (!eventDate || !eventName) {
+      return res.status(400).json({ error: "Event date and name are required" });
     }
 
-    // Convert timestamp to formatted date
-    const formattedDate = moment(eventDate).format("MMMM D, YYYY, h:mm A");
-    console.log("Formatted Date:", formattedDate); // Debugging
+    // Convert timestamp to Date object
+    const formattedDate = moment(eventDate).toDate();
+    console.log("Parsed Event Date:", formattedDate);
 
-    let event = await Event.findOne();
+    let event = await Event.findOne(); // You may want to find by ID or criteria
+
     if (event) {
       event.eventDate = formattedDate;
+      event.name = eventName;
     } else {
-      event = new Event({ eventDate: formattedDate });
+      event = new Event({ eventDate: formattedDate, name: eventName });
     }
 
     await event.save();
-    console.log("Event saved successfully:", event); // Debugging
+    console.log("Event saved successfully:", event);
 
-    res.json({ message: "Event updated", eventDate: formattedDate });
+    res.json({ message: "Event updated", event });
   } catch (err) {
     console.error("Error updating event:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 export default router;
