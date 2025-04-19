@@ -15,7 +15,7 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time } = req.body;
+      const { title, description, date, time, durationDays } = req.body;
 
       if (!title || !description || !date) {
         return res
@@ -23,10 +23,10 @@ router.post(
           .json({ message: "Title, description, and date are required." });
       }
 
+      const parsedDuration = parseInt(durationDays, 10) || 1;
+
       const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
-            "base64"
-          )}`
+        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`
         : null;
 
       const galleryImages = req.files["galleryImages"]
@@ -34,17 +34,21 @@ router.post(
             (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
           )
         : [];
+
       const dateTime = moment
         .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
         .toDate();
+
       const endTime = new Date(
-        dateTime.getTime() + duration * 24 * 60 * 60 * 1000
+        dateTime.getTime() + parsedDuration * 24 * 60 * 60 * 1000
       );
+
       const newEvent = new Event({
         title,
         description,
         date,
         time,
+        durationDays: parsedDuration,
         dateTime,
         endTime,
         mainImage,
@@ -92,15 +96,18 @@ router.put(
 
       if (title) updates.title = title;
       if (description) updates.description = description;
+
+      const parsedDuration = parseInt(durationDays, 10) || 1;
+      updates.durationDays = parsedDuration; // ✅ Save the updated duration
+
       if (date && time) {
         const updatedStart = moment
           .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
           .toDate();
         updates.dateTime = updatedStart;
 
-        const duration = parseInt(durationDays) || 1;
         updates.endTime = new Date(
-          updatedStart.getTime() + duration * 24 * 60 * 60 * 1000
+          updatedStart.getTime() + parsedDuration * 24 * 60 * 60 * 1000
         );
       }
 
@@ -133,6 +140,7 @@ router.put(
     }
   }
 );
+
 
 router.delete("/:id", async (req, res) => {
   try {
