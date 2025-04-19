@@ -9,11 +9,15 @@ router.get("/event", async (req, res) => {
     const event = await Event.findOne();
     if (!event) return res.status(404).json({ message: "No event found" });
 
-    res.json({ eventDate: event.eventDate });
+    res.json({
+      eventDate: event.eventDate,
+      eventName: event.name || "Unnamed Event",
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 router.post("/event", async (req, res) => {
   try {
