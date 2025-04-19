@@ -6,8 +6,8 @@ const router = express.Router();
 // POST: Add a new comment
 router.post("/add", async (req, res) => {
   try {
-    const { name, email, message } = req.body;
-    const newComment = new Comment({ name, email, message });
+    const { name, email, message, eventId  } = req.body;
+    const newComment = new Comment({ name, email, message, eventId });
     await newComment.save();
     res.status(201).json({ success: true, comment: newComment });
   } catch (error) {
@@ -24,6 +24,16 @@ router.get("/", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+router.get("/:eventId", async (req, res) => {
+  try {
+    const comments = await Comment.find({ eventId: req.params.eventId }).sort({ createdAt: -1 });
+    res.status(200).json({ comments });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch comments", error });
+  }
+});
+
 
 // DELETE: Remove a comment
 router.delete("/:id", async (req, res) => {
