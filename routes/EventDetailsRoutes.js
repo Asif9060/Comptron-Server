@@ -34,13 +34,19 @@ router.post(
             (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
           )
         : [];
-        const dateTime = moment.tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka").toDate();
+      const dateTime = moment
+        .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+        .toDate();
+      const endTime = new Date(
+        dateTime.getTime() + duration * 24 * 60 * 60 * 1000
+      );
       const newEvent = new Event({
         title,
         description,
         date,
         time,
         dateTime,
+        endTime,
         mainImage,
         galleryImages,
       });
@@ -63,7 +69,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 router.get("/:id", async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -82,13 +87,21 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time } = req.body;
+      const { title, description, date, time, durationDays } = req.body;
       const updates = {};
 
       if (title) updates.title = title;
       if (description) updates.description = description;
       if (date && time) {
-        updates.dateTime = moment.tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka").toDate();
+        const updatedStart = moment
+          .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+          .toDate();
+        updates.dateTime = updatedStart;
+
+        const duration = parseInt(durationDays) || 1;
+        updates.endTime = new Date(
+          updatedStart.getTime() + duration * 24 * 60 * 60 * 1000
+        );
       }
 
       if (req.files["mainImage"]) {
