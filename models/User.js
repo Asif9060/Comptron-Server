@@ -22,10 +22,12 @@ const UserSchema = new mongoose.Schema({
     enum: ["Male", "Female"],
     required: true 
   },
-  linkedIn: String,
-  github: String,
-  portfolio: String,
-  cv: String,
+  socials: {
+    github: String,
+    linkedin: String,
+    portfolio: String,
+    cv: String,
+  },
   validityDate: { 
     type: Date, 
     required: true, 

@@ -20,7 +20,7 @@ const generateUniqueId = async () => {
 // Register new user
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills, image,gender, password  } = req.body;
+    const { name, email, phone, skills, socials, image, gender, password  } = req.body;
 
     const customId = await generateUniqueId();
     const validityDate = new Date();
@@ -33,6 +33,7 @@ router.post("/register", async (req, res) => {
       skills,
       customId,
       gender,
+      socials: socials ? JSON.parse(socials) : [],
       image,
       password,
       validityDate,
@@ -61,9 +62,9 @@ router.get("/profile/:id", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv } = req.body;
+    const { name, skills, email, phone, image, socials, gender, } = req.body;
 
-    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv };
+    const updateData = { name, skills, email, phone, socials, image, gender, };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
