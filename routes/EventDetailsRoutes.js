@@ -5,7 +5,12 @@ import moment from "moment-timezone";
 const router = express.Router();
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB
+  },
+});
 
 router.post(
   "/create",
@@ -15,6 +20,9 @@ router.post(
   ]),
   async (req, res) => {
     try {
+      console.log("Incoming request body:", req.body);
+      console.log("Incoming files:", req.files);
+
       const { title, description, startDate, startTime, endDate, endTime } =
         req.body;
 
@@ -26,12 +34,9 @@ router.post(
         !endDate ||
         !endTime
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Title, description, start and end date/time are required.",
-          });
+        return res.status(400).json({
+          message: "Title, description, start and end date/time are required.",
+        });
       }
 
       const startDateTime = moment
