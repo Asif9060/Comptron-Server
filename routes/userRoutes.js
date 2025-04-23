@@ -61,9 +61,9 @@ router.get("/profile/:id", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv } = req.body;
+    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv, bio } = req.body;
 
-    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv };
+    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv, bio };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
