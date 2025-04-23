@@ -5,6 +5,11 @@ const UserSchema = new mongoose.Schema({
   email: String,
   phone: String,
   skills: String,
+  bio: {
+    type: String,
+    default: "",
+  },
+  
   customId: {
     type: String,
     required: true,
