@@ -15,18 +15,43 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time, durationDays } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } =
+        req.body;
 
-      if (!title || !description || !date) {
+      if (
+        !title ||
+        !description ||
+        !startDate ||
+        !startTime ||
+        !endDate ||
+        !endTime
+      ) {
         return res
           .status(400)
-          .json({ message: "Title, description, and date are required." });
+          .json({
+            message:
+              "Title, description, start and end date/time are required.",
+          });
       }
 
-      const parsedDuration = parseInt(durationDays, 10) || 1;
+      const startDateTime = moment
+        .tz(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
+        .toDate();
+
+      const endDateTime = moment
+        .tz(`${endDate} ${endTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
+        .toDate();
+
+      if (endDateTime <= startDateTime) {
+        return res
+          .status(400)
+          .json({ message: "End date/time must be after start date/time." });
+      }
 
       const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`
+        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
+            "base64"
+          )}`
         : null;
 
       const galleryImages = req.files["galleryImages"]
@@ -35,22 +60,11 @@ router.post(
           )
         : [];
 
-      const dateTime = moment
-        .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
-        .toDate();
-
-      const endTime = new Date(
-        dateTime.getTime() + parsedDuration * 24 * 60 * 60 * 1000
-      );
-
       const newEvent = new Event({
         title,
         description,
-        date,
-        time,
-        durationDays: parsedDuration,
-        dateTime,
-        endTime,
+        startDateTime,
+        endDateTime,
         mainImage,
         galleryImages,
       });
@@ -91,24 +105,30 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time, durationDays } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } =
+        req.body;
       const updates = {};
 
       if (title) updates.title = title;
       if (description) updates.description = description;
 
-      const parsedDuration = parseInt(durationDays, 10) || 1;
-      updates.durationDays = parsedDuration; // ✅ Save the updated duration
-
-      if (date && time) {
+      if (startDate && startTime && endDate && endTime) {
         const updatedStart = moment
-          .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+          .tz(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
           .toDate();
-        updates.dateTime = updatedStart;
 
-        updates.endTime = new Date(
-          updatedStart.getTime() + parsedDuration * 24 * 60 * 60 * 1000
-        );
+        const updatedEnd = moment
+          .tz(`${endDate} ${endTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
+          .toDate();
+
+        if (updatedEnd <= updatedStart) {
+          return res
+            .status(400)
+            .json({ message: "End date/time must be after start date/time." });
+        }
+
+        updates.startDateTime = updatedStart;
+        updates.endDateTime = updatedEnd;
       }
 
       if (req.files["mainImage"]) {
@@ -129,8 +149,9 @@ router.put(
         { new: true }
       );
 
-      if (!updatedEvent)
+      if (!updatedEvent) {
         return res.status(404).json({ message: "Event not found" });
+      }
 
       res
         .status(200)
@@ -140,7 +161,6 @@ router.put(
     }
   }
 );
-
 
 router.delete("/:id", async (req, res) => {
   try {
