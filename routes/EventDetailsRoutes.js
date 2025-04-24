@@ -2,10 +2,14 @@ import express from "express";
 import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
+
 const router = express.Router();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+// Optional: Create index on dateTime for optimized sorting
+Event.collection.createIndex({ dateTime: 1 }).catch(console.error);
 
 router.post(
   "/create",
@@ -64,11 +68,12 @@ router.post(
   }
 );
 
+// ✅ Updated GET route using allowDiskUse
 router.get("/", async (req, res) => {
   try {
     const events = await Event.aggregate([
       { $sort: { dateTime: 1 } }
-    ]).option({ allowDiskUse: true });
+    ]).allowDiskUse(true);
 
     res.status(200).json(events);
   } catch (error) {
@@ -102,7 +107,7 @@ router.put(
       if (description) updates.description = description;
 
       const parsedDuration = parseInt(durationDays, 10) || 1;
-      updates.durationDays = parsedDuration; // ✅ Save the updated duration
+      updates.durationDays = parsedDuration;
 
       if (date && time) {
         const updatedStart = moment
@@ -116,9 +121,7 @@ router.put(
       }
 
       if (req.files["mainImage"]) {
-        updates.mainImage = `data:image/png;base64,${req.files[
-          "mainImage"
-        ][0].buffer.toString("base64")}`;
+        updates.mainImage = `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`;
       }
 
       if (req.files["galleryImages"]) {
@@ -136,15 +139,12 @@ router.put(
       if (!updatedEvent)
         return res.status(404).json({ message: "Event not found" });
 
-      res
-        .status(200)
-        .json({ message: "Event updated successfully", updatedEvent });
+      res.status(200).json({ message: "Event updated successfully", updatedEvent });
     } catch (error) {
       res.status(500).json({ message: "Error updating event", error });
     }
   }
 );
-
 
 router.delete("/:id", async (req, res) => {
   try {
