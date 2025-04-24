@@ -230,4 +230,25 @@ router.get("/stats", async (req, res) => {
   }
 });
 
+// New route to fetch users grouped by year of validation
+router.get("/byYear", async (req, res) => {
+  try {
+    const users = await User.find();
+
+    // Group users by year of validation
+    const usersByYear = users.reduce((acc, user) => {
+      const year = user.validityDate.getFullYear();
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+      acc[year].push({ id: user._id, name: user.name, customId: user.customId });
+      return acc;
+    }, {});
+
+    res.json(usersByYear);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching users by year", error });
+  }
+});
+
 export default router;
