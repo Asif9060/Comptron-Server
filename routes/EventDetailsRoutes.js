@@ -66,9 +66,13 @@ router.post(
 
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.find().sort({ dateTime: 1 }); // Ascending by time
+    const events = await Event.aggregate([
+      { $sort: { dateTime: 1 } }
+    ]).option({ allowDiskUse: true });
+
     res.status(200).json(events);
   } catch (error) {
+    console.error("Error fetching events:", error);
     res.status(500).json({ message: "Error fetching events", error });
   }
 });
