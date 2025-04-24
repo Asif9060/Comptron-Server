@@ -170,7 +170,7 @@ router.get("/byYear", async (req, res) => {
       if (!acc[year]) {
         acc[year] = [];
       }
-      acc[year].push({ id: customId, name: member.name, role: member.role });
+      acc[year].push({ id: member.customId, name: member.name, role: member.role });
       return acc;
     }, {});
 
