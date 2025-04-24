@@ -8,8 +8,8 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Optional: Create index on dateTime for optimized sorting
-Event.collection.createIndex({ dateTime: 1 }).catch(console.error);
+// Create index on startDateTime for optimized sorting
+Event.collection.createIndex({ startDateTime: 1 }).catch(console.error);
 
 router.post(
   "/create",
@@ -19,15 +19,13 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time, durationDays } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } = req.body;
 
-      if (!title || !description || !date) {
+      if (!title || !description || !startDate || !startTime || !endDate || !endTime) {
         return res
           .status(400)
-          .json({ message: "Title, description, and date are required." });
+          .json({ message: "Title, description, start date/time, and end date/time are required." });
       }
-
-      const parsedDuration = parseInt(durationDays, 10) || 1;
 
       const mainImage = req.files["mainImage"]
         ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`
@@ -39,22 +37,19 @@ router.post(
           )
         : [];
 
-      const dateTime = moment
-        .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+      const startDateTime = moment
+        .tz(`${startDate} ${startTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
         .toDate();
 
-      const endTime = new Date(
-        dateTime.getTime() + parsedDuration * 24 * 60 * 60 * 1000
-      );
+      const endDateTime = moment
+        .tz(`${endDate} ${endTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+        .toDate();
 
       const newEvent = new Event({
         title,
         description,
-        date,
-        time,
-        durationDays: parsedDuration,
-        dateTime,
-        endTime,
+        startDateTime,
+        endDateTime,
         mainImage,
         galleryImages,
       });
@@ -71,13 +66,13 @@ router.post(
 // ✅ Updated GET route using allowDiskUse
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.find().sort({ dateTime: 1 }); // Ascending by time
+    const events = await Event.find().sort({ startDateTime: 1 }); // Ascending by startDateTime
 
     const formattedEvents = events.map((event) => {
-      const startDate = moment(event.dateTime).format("YYYY-MM-DD");
-      const startTime = moment(event.dateTime).format("hh:mm A");
-      const endDate = moment(event.endTime).format("YYYY-MM-DD");
-      const endTime = moment(event.endTime).format("hh:mm A");
+      const startDate = moment(event.startDateTime).format("YYYY-MM-DD");
+      const startTime = moment(event.startDateTime).format("hh:mm A");
+      const endDate = moment(event.endDateTime).format("YYYY-MM-DD");
+      const endTime = moment(event.endDateTime).format("hh:mm A");
 
       return {
         ...event._doc,
@@ -112,24 +107,22 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const { title, description, date, time, durationDays } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } = req.body;
       const updates = {};
 
       if (title) updates.title = title;
       if (description) updates.description = description;
 
-      const parsedDuration = parseInt(durationDays, 10) || 1;
-      updates.durationDays = parsedDuration;
-
-      if (date && time) {
-        const updatedStart = moment
-          .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+      if (startDate && startTime) {
+        updates.startDateTime = moment
+          .tz(`${startDate} ${startTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
           .toDate();
-        updates.dateTime = updatedStart;
+      }
 
-        updates.endTime = new Date(
-          updatedStart.getTime() + parsedDuration * 24 * 60 * 60 * 1000
-        );
+      if (endDate && endTime) {
+        updates.endDateTime = moment
+          .tz(`${endDate} ${endTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+          .toDate();
       }
 
       if (req.files["mainImage"]) {
@@ -164,7 +157,7 @@ router.delete("/:id", async (req, res) => {
     if (!event) return res.status(404).json({ message: "Event not found" });
     res.status(200).json({ message: "Event deleted successfully", event });
   } catch (error) {
-    res.status (500).json({ message: "Error deleting event", error });
+    res.status(500).json({ message: "Error deleting event", error });
   }
 });
 
