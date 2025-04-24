@@ -30,6 +30,39 @@ const generateUniqueId = async () => {
   return `CCM${year}-${randomDigits}`;
 };
 
+router.get("/byYear", async (req, res) => {
+  try {
+    const members = await Member.find();
+
+    if (!members || members.length === 0) {
+      return res.status(404).json({ message: "No members found" });
+    }
+
+    // Group members by year of validation
+    const committeeByYear = members.reduce((acc, member) => {
+      if (member.validityDate) {
+        const year = new Date(member.validityDate).getFullYear();
+        if (!acc[year]) {
+          acc[year] = [];
+        }
+        acc[year].push({
+          id: member.customId,
+          name: member.name,
+          role: member.role,
+        });
+      }
+      return acc;
+    }, {});
+
+    res.json(committeeByYear);
+  } catch (error) {
+    console.error("Error in /byYear route:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching committee members by year", error });
+  }
+});
+
 // Create Member
 router.post("/", upload.single("image"), async (req, res) => {
   try {
@@ -172,35 +205,6 @@ router.put("/validity/:id", async (req, res) => {
   res.json(member);
 });
 
-router.get("/byYear", async (req, res) => {
-  try {
-    const members = await Member.find();
 
-    if (!members || members.length === 0) {
-      return res.status(404).json({ message: "No members found" });
-    }
-
-    // Group members by year of validation
-    const committeeByYear = members.reduce((acc, member) => {
-      if (member.validityDate) {
-        const year = new Date(member.validityDate).getFullYear();
-        if (!acc[year]) {
-          acc[year] = [];
-        }
-        acc[year].push({
-          id: member.customId,
-          name: member.name,
-          role: member.role,
-        });
-      }
-      return acc;
-    }, {});
-
-    res.json(committeeByYear);
-  } catch (error) {
-    console.error("Error in /byYear route:", error);
-    res.status(500).json({ message: "Error fetching committee members by year", error });
-  }
-});
 
 export default router;
