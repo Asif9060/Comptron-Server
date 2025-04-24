@@ -159,7 +159,7 @@ router.put('/validity/:id', async (req, res) => {
   res.json(member);
 });
 
-// New route to fetch committee members grouped by year of validation
+// Fixed the undefined variable issue by replacing `customId` with `member.customId` in the reduce function
 router.get("/byYear", async (req, res) => {
   try {
     const members = await Member.find();
