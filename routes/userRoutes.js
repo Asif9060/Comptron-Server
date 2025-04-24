@@ -8,10 +8,14 @@ const generateUniqueId = async () => {
   const year = new Date().getFullYear();
   let randomDigits = Math.floor(1000 + Math.random() * 9000);
 
-  let existingUser = await User.findOne({ customId: `CGM${year}-${randomDigits}` });
+  let existingUser = await User.findOne({
+    customId: `CGM${year}-${randomDigits}`,
+  });
   while (existingUser) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
-    existingUser = await User.findOne({ customId: `CGM${year}-${randomDigits}` });
+    existingUser = await User.findOne({
+      customId: `CGM${year}-${randomDigits}`,
+    });
   }
 
   return `CGM${year}-${randomDigits}`;
@@ -20,7 +24,7 @@ const generateUniqueId = async () => {
 // Register new user
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, skills, image, gender, password  } = req.body;
+    const { name, email, phone, skills, image, gender, password } = req.body;
 
     const customId = await generateUniqueId();
     const validityDate = new Date();
@@ -61,9 +65,33 @@ router.get("/profile/:id", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv, bio } = req.body;
+    const {
+      name,
+      skills,
+      email,
+      phone,
+      image,
+      linkedIn,
+      github,
+      gender,
+      portfolio,
+      cv,
+      bio,
+    } = req.body;
 
-    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv, bio };
+    const updateData = {
+      name,
+      skills,
+      email,
+      phone,
+      image,
+      linkedIn,
+      github,
+      gender,
+      portfolio,
+      cv,
+      bio,
+    };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
@@ -77,10 +105,11 @@ router.put("/update/:id", async (req, res) => {
     res.json({ ...user.toObject(), isValid });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: error.message || "Failed to update profile" });
+    res
+      .status(400)
+      .json({ message: error.message || "Failed to update profile" });
   }
 });
-
 
 router.put("/validate/:id", async (req, res) => {
   try {
@@ -114,7 +143,19 @@ router.put("/validate/:id", async (req, res) => {
 // Update user profile by customId
 router.put("/profile/:id", async (req, res) => {
   try {
-    const { name, skills, email, phone, image, linkedIn, github, gender,  portfolio, cv, bio } = req.body;
+    const {
+      name,
+      skills,
+      email,
+      phone,
+      image,
+      linkedIn,
+      github,
+      gender,
+      portfolio,
+      cv,
+      bio,
+    } = req.body;
 
     // Basic validation
     if (!name || !email) {
@@ -129,7 +170,19 @@ router.put("/profile/:id", async (req, res) => {
     // const validityDate = new Date();
     // validityDate.setFullYear(validityDate.getFullYear() + 1); // Extend validity by 1 year
 
-    const updateData = { name, skills, email, phone, image, linkedIn, github, gender, portfolio, cv, bio };
+    const updateData = {
+      name,
+      skills,
+      email,
+      phone,
+      image,
+      linkedIn,
+      github,
+      gender,
+      portfolio,
+      cv,
+      bio,
+    };
 
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
@@ -147,7 +200,9 @@ router.put("/profile/:id", async (req, res) => {
     res.json({ ...user.toObject(), isValid });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: error.message || "Failed to update profile" });
+    res
+      .status(400)
+      .json({ message: error.message || "Failed to update profile" });
   }
 });
 
@@ -218,7 +273,9 @@ router.get("/stats", async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isValid: true });
-    const upcomingEvents = await Event.countDocuments({ date: { $gte: new Date() } });
+    const upcomingEvents = await Event.countDocuments({
+      date: { $gte: new Date() },
+    });
 
     res.json({
       totalUsers,
@@ -241,7 +298,11 @@ router.get("/byYear", async (req, res) => {
       if (!acc[year]) {
         acc[year] = [];
       }
-      acc[year].push({ id: user._id, name: user.name, customId: user.customId });
+      acc[year].push({
+        id: user._id,
+        name: user.name,
+        customId: user.customId,
+      });
       return acc;
     }, {});
 
