@@ -5,12 +5,7 @@ import moment from "moment-timezone";
 const router = express.Router();
 
 const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB
-  },
-});
+const upload = multer({ storage });
 
 router.post(
   "/create",
@@ -20,43 +15,18 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      console.log("Incoming request body:", req.body);
-      console.log("Incoming files:", req.files);
+      const { title, description, date, time, durationDays } = req.body;
 
-      const { title, description, startDate, startTime, endDate, endTime } =
-        req.body;
-
-      if (
-        !title ||
-        !description ||
-        !startDate ||
-        !startTime ||
-        !endDate ||
-        !endTime
-      ) {
-        return res.status(400).json({
-          message: "Title, description, start and end date/time are required.",
-        });
-      }
-
-      const startDateTime = moment
-        .tz(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
-        .toDate();
-
-      const endDateTime = moment
-        .tz(`${endDate} ${endTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
-        .toDate();
-
-      if (endDateTime <= startDateTime) {
+      if (!title || !description || !date) {
         return res
           .status(400)
-          .json({ message: "End date/time must be after start date/time." });
+          .json({ message: "Title, description, and date are required." });
       }
 
+      const parsedDuration = parseInt(durationDays, 10) || 1;
+
       const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
-            "base64"
-          )}`
+        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`
         : null;
 
       const galleryImages = req.files["galleryImages"]
@@ -65,11 +35,22 @@ router.post(
           )
         : [];
 
+      const dateTime = moment
+        .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
+        .toDate();
+
+      const endTime = new Date(
+        dateTime.getTime() + parsedDuration * 24 * 60 * 60 * 1000
+      );
+
       const newEvent = new Event({
         title,
         description,
-        startDateTime,
-        endDateTime,
+        date,
+        time,
+        durationDays: parsedDuration,
+        dateTime,
+        endTime,
         mainImage,
         galleryImages,
       });
@@ -85,17 +66,10 @@ router.post(
 
 router.get("/", async (req, res) => {
   try {
-    console.log("Fetching events from database...");
-    const events = await Event.find().sort({ startDateTime: 1 }); // Sort by start time
-    console.log(`Found ${events.length} events`);
+    const events = await Event.find().sort({ dateTime: 1 }); // Ascending by time
     res.status(200).json(events);
   } catch (error) {
-    console.error("Error in GET /api/eventDetails:", error);
-    res.status(500).json({ 
-      message: "Error fetching events", 
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
-    });
+    res.status(500).json({ message: "Error fetching events", error });
   }
 });
 
@@ -117,30 +91,24 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const { title, description, startDate, startTime, endDate, endTime } =
-        req.body;
+      const { title, description, date, time, durationDays } = req.body;
       const updates = {};
 
       if (title) updates.title = title;
       if (description) updates.description = description;
 
-      if (startDate && startTime && endDate && endTime) {
+      const parsedDuration = parseInt(durationDays, 10) || 1;
+      updates.durationDays = parsedDuration; // ✅ Save the updated duration
+
+      if (date && time) {
         const updatedStart = moment
-          .tz(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
+          .tz(`${date} ${time}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
           .toDate();
+        updates.dateTime = updatedStart;
 
-        const updatedEnd = moment
-          .tz(`${endDate} ${endTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
-          .toDate();
-
-        if (updatedEnd <= updatedStart) {
-          return res
-            .status(400)
-            .json({ message: "End date/time must be after start date/time." });
-        }
-
-        updates.startDateTime = updatedStart;
-        updates.endDateTime = updatedEnd;
+        updates.endTime = new Date(
+          updatedStart.getTime() + parsedDuration * 24 * 60 * 60 * 1000
+        );
       }
 
       if (req.files["mainImage"]) {
@@ -161,9 +129,8 @@ router.put(
         { new: true }
       );
 
-      if (!updatedEvent) {
+      if (!updatedEvent)
         return res.status(404).json({ message: "Event not found" });
-      }
 
       res
         .status(200)
@@ -173,6 +140,7 @@ router.put(
     }
   }
 );
+
 
 router.delete("/:id", async (req, res) => {
   try {
