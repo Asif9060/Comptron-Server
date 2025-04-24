@@ -39,46 +39,61 @@ router.post(
         });
       }
 
-      const startDateTime = moment
-        .tz(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
-        .toDate();
+      try {
+        const startDateTime = moment.tz(
+          `${startDate} ${startTime}`,
+          "YYYY-MM-DD HH:mm",
+          "Asia/Dhaka"
+        );
+        const endDateTime = moment.tz(
+          `${endDate} ${endTime}`,
+          "YYYY-MM-DD HH:mm",
+          "Asia/Dhaka"
+        );
 
-      const endDateTime = moment
-        .tz(`${endDate} ${endTime}`, "YYYY-MM-DD HH:mm", "Asia/Dhaka")
-        .toDate();
+        if (!startDateTime.isValid() || !endDateTime.isValid()) {
+          return res.status(400).json({ message: "Invalid date/time format" });
+        }
 
-      if (endDateTime <= startDateTime) {
-        return res
-          .status(400)
-          .json({ message: "End date/time must be after start date/time." });
+        if (endDateTime.isSameOrBefore(startDateTime)) {
+          return res
+            .status(400)
+            .json({ message: "End date/time must be after start date/time." });
+        }
+
+        const mainImage = req.files["mainImage"]
+          ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
+              "base64"
+            )}`
+          : null;
+
+        const galleryImages = req.files["galleryImages"]
+          ? req.files["galleryImages"].map(
+              (file) =>
+                `data:image/png;base64,${file.buffer.toString("base64")}`
+            )
+          : [];
+
+        const newEvent = new Event({
+          title,
+          description,
+          startDateTime: startDateTime.toDate(),
+          endDateTime: endDateTime.toDate(),
+          mainImage,
+          galleryImages,
+        });
+
+        await newEvent.save();
+        res.status(201).json(newEvent);
+      } catch (dateError) {
+        console.error("Date processing error:", dateError);
+        return res.status(400).json({ message: "Error processing dates" });
       }
-
-      const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
-            "base64"
-          )}`
-        : null;
-
-      const galleryImages = req.files["galleryImages"]
-        ? req.files["galleryImages"].map(
-            (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
-          )
-        : [];
-
-      const newEvent = new Event({
-        title,
-        description,
-        startDateTime,
-        endDateTime,
-        mainImage,
-        galleryImages,
-      });
-
-      await newEvent.save();
-      res.status(201).json(newEvent);
     } catch (error) {
       console.error("Error creating event:", error);
-      res.status(500).json({ message: "Error creating event", error });
+      res
+        .status(500)
+        .json({ message: "Error creating event", error: error.message });
     }
   }
 );
