@@ -18,10 +18,14 @@ const getImageBase64 = (file) => {
 const generateUniqueId = async () => {
   const year = new Date().getFullYear();
   let randomDigits = Math.floor(1000 + Math.random() * 9000);
-  let existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
+  let existingMember = await Member.findOne({
+    customId: `CCM${year}-${randomDigits}`,
+  });
   while (existingMember) {
     randomDigits = Math.floor(1000 + Math.random() * 9000);
-    existingMember = await Member.findOne({ customId: `CCM${year}-${randomDigits}` });
+    existingMember = await Member.findOne({
+      customId: `CCM${year}-${randomDigits}`,
+    });
   }
   return `CCM${year}-${randomDigits}`;
 };
@@ -29,7 +33,8 @@ const generateUniqueId = async () => {
 // Create Member
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, phone, skills, socials, validityDate, isValid } = req.body;
+    const { name, role, email, phone, skills, socials, validityDate, isValid } =
+      req.body;
 
     if (!name || !role) {
       return res.status(400).json({ message: "Name and role are required." });
@@ -80,7 +85,8 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, role, email, phone, skills, socials, validityDate, isValid } = req.body;
+    const { name, role, email, phone, skills, socials, validityDate, isValid } =
+      req.body;
     const memberId = req.params.id;
 
     const existingMember = await Member.findOne({ customId: memberId }); // FIXED this line
@@ -99,8 +105,13 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     existingMember.phone = phone || existingMember.phone;
     existingMember.skills = skills || existingMember.skills; // FIXED typo here
     existingMember.validityDate = validityDate || existingMember.validityDate;
-    existingMember.isValid = isValid !== undefined ? isValid === "true" || isValid === true : existingMember.isValid;
-    existingMember.socials = socials ? JSON.parse(socials) : existingMember.socials;
+    existingMember.isValid =
+      isValid !== undefined
+        ? isValid === "true" || isValid === true
+        : existingMember.isValid;
+    existingMember.socials = socials
+      ? JSON.parse(socials)
+      : existingMember.socials;
     existingMember.image = imageBase64;
 
     await existingMember.save();
@@ -135,47 +146,59 @@ router.delete("/:id", async (req, res) => {
     await deletedMember.save();
     await Member.deleteOne({ customId: id }); // FIXED
 
-    res.status(200).json({ message: "Member archived successfully", deletedMember });
+    res
+      .status(200)
+      .json({ message: "Member archived successfully", deletedMember });
   } catch (error) {
     console.error("Error archiving member:", error); // helpful log
     res.status(500).json({ message: "Error archiving member", error });
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   const member = await Member.findOne({ customId: req.params.id });
-  if (!member) return res.status(404).json({ error: 'Member not found' });
+  if (!member) return res.status(404).json({ error: "Member not found" });
   res.json(member);
 });
 
-router.put('/validity/:id', async (req, res) => {
+router.put("/validity/:id", async (req, res) => {
   const { isValid, validityDate } = req.body;
   const member = await Member.findOneAndUpdate(
     { customId: req.params.id },
     { isValid, validityDate },
     { new: true }
   );
-  if (!member) return res.status(404).json({ error: 'Member not found' });
+  if (!member) return res.status(404).json({ error: "Member not found" });
   res.json(member);
 });
 
-// Fixed the undefined variable issue by replacing `customId` with `member.customId` in the reduce function
 router.get("/byYear", async (req, res) => {
   try {
     const members = await Member.find();
 
+    if (!members || members.length === 0) {
+      return res.status(404).json({ message: "No members found" });
+    }
+
     // Group members by year of validation
     const committeeByYear = members.reduce((acc, member) => {
-      const year = member.validityDate.getFullYear();
-      if (!acc[year]) {
-        acc[year] = [];
+      if (member.validityDate) {
+        const year = new Date(member.validityDate).getFullYear();
+        if (!acc[year]) {
+          acc[year] = [];
+        }
+        acc[year].push({
+          id: member.customId,
+          name: member.name,
+          role: member.role,
+        });
       }
-      acc[year].push({ id: member.customId, name: member.name, role: member.role });
       return acc;
     }, {});
 
     res.json(committeeByYear);
   } catch (error) {
+    console.error("Error in /byYear route:", error);
     res.status(500).json({ message: "Error fetching committee members by year", error });
   }
 });
