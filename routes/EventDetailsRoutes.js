@@ -71,13 +71,25 @@ router.post(
 // ✅ Updated GET route using allowDiskUse
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.aggregate([
-      { $sort: { dateTime: 1 } }
-    ]).allowDiskUse(true);
+    const events = await Event.find().sort({ dateTime: 1 }); // Ascending by time
 
-    res.status(200).json(events);
+    const formattedEvents = events.map((event) => {
+      const startDate = moment(event.dateTime).format("YYYY-MM-DD");
+      const startTime = moment(event.dateTime).format("hh:mm A");
+      const endDate = moment(event.endTime).format("YYYY-MM-DD");
+      const endTime = moment(event.endTime).format("hh:mm A");
+
+      return {
+        ...event._doc,
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+      };
+    });
+
+    res.status(200).json(formattedEvents);
   } catch (error) {
-    console.error("Error fetching events:", error);
     res.status(500).json({ message: "Error fetching events", error });
   }
 });
@@ -152,7 +164,7 @@ router.delete("/:id", async (req, res) => {
     if (!event) return res.status(404).json({ message: "Event not found" });
     res.status(200).json({ message: "Event deleted successfully", event });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting event", error });
+    res.status (500).json({ message: "Error deleting event", error });
   }
 });
 
