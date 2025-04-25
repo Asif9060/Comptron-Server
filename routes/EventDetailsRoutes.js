@@ -19,16 +19,29 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { title, description, startDate, startTime, endDate, endTime } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } =
+        req.body;
 
-      if (!title || !description || !startDate || !startTime || !endDate || !endTime) {
+      if (
+        !title ||
+        !description ||
+        !startDate ||
+        !startTime ||
+        !endDate ||
+        !endTime
+      ) {
         return res
           .status(400)
-          .json({ message: "Title, description, start date/time, and end date/time are required." });
+          .json({
+            message:
+              "Title, description, start date/time, and end date/time are required.",
+          });
       }
 
       const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`
+        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
+            "base64"
+          )}`
         : null;
 
       const galleryImages = req.files["galleryImages"]
@@ -107,7 +120,8 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const { title, description, startDate, startTime, endDate, endTime } = req.body;
+      const { title, description, startDate, startTime, endDate, endTime } =
+        req.body;
       const updates = {};
 
       if (title) updates.title = title;
@@ -126,7 +140,9 @@ router.put(
       }
 
       if (req.files["mainImage"]) {
-        updates.mainImage = `data:image/png;base64,${req.files["mainImage"][0].buffer.toString("base64")}`;
+        updates.mainImage = `data:image/png;base64,${req.files[
+          "mainImage"
+        ][0].buffer.toString("base64")}`;
       }
 
       if (req.files["galleryImages"]) {
@@ -144,7 +160,9 @@ router.put(
       if (!updatedEvent)
         return res.status(404).json({ message: "Event not found" });
 
-      res.status(200).json({ message: "Event updated successfully", updatedEvent });
+      res
+        .status(200)
+        .json({ message: "Event updated successfully", updatedEvent });
     } catch (error) {
       res.status(500).json({ message: "Error updating event", error });
     }

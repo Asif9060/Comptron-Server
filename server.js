@@ -20,7 +20,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",  
-  "https://comptron.vercel.app" 
+  "https://comptron.vercel.app",
+  "https://comptron-club-62ud.vercel.app/" 
 ];
 
 
