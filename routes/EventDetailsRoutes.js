@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
+import cloudinary from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -38,17 +39,30 @@ router.post(
           });
       }
 
-      const mainImage = req.files["mainImage"]
-        ? `data:image/png;base64,${req.files["mainImage"][0].buffer.toString(
-            "base64"
-          )}`
-        : null;
+      let mainImage = null;
+      if (req.files["mainImage"]) {
+        const file = req.files["mainImage"][0];
+        mainImage = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          });
+          stream.end(file.buffer);
+        });
+      }
 
-      const galleryImages = req.files["galleryImages"]
-        ? req.files["galleryImages"].map(
-            (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
-          )
-        : [];
+      let galleryImages = [];
+      if (req.files["galleryImages"]) {
+        galleryImages = await Promise.all(req.files["galleryImages"].map(file =>
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            });
+            stream.end(file.buffer);
+          })
+        ));
+      }
 
       const startDateTime = moment
         .tz(`${startDate} ${startTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
@@ -140,15 +154,26 @@ router.put(
       }
 
       if (req.files["mainImage"]) {
-        updates.mainImage = `data:image/png;base64,${req.files[
-          "mainImage"
-        ][0].buffer.toString("base64")}`;
+        const file = req.files["mainImage"][0];
+        updates.mainImage = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          });
+          stream.end(file.buffer);
+        });
       }
 
       if (req.files["galleryImages"]) {
-        updates.galleryImages = req.files["galleryImages"].map(
-          (file) => `data:image/png;base64,${file.buffer.toString("base64")}`
-        );
+        updates.galleryImages = await Promise.all(req.files["galleryImages"].map(file =>
+          new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            });
+            stream.end(file.buffer);
+          })
+        ));
       }
 
       const updatedEvent = await Event.findByIdAndUpdate(

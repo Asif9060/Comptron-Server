@@ -1,19 +1,13 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
 import Member from "../models/Member.js";
 import DeletedMember from "../models/DeletedMember.js";
+import cloudinary from '../config/cloudinary.js';
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const router = express.Router();
-
-const getImageBase64 = (file) => {
-  const mimeType = file.mimetype;
-  const base64Data = file.buffer.toString("base64");
-  return `data:${mimeType};base64,${base64Data}`;
-};
 
 const generateUniqueId = async () => {
   const year = new Date().getFullYear();
@@ -74,7 +68,16 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 
     const customId = await generateUniqueId();
-    const imageBase64 = req.file ? getImageBase64(req.file) : null;
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result.secure_url);
+        });
+        stream.end(req.file.buffer);
+      });
+    }
 
     const newMember = new Member({
       customId,
@@ -83,7 +86,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       email,
       phone,
       skills,
-      image: imageBase64,
+      image: imageUrl,
       validityDate,
       isValid: isValid === "true" || isValid === true,
       socials: socials ? JSON.parse(socials) : [],
@@ -127,9 +130,15 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    let imageBase64 = existingMember.image;
+    let imageUrl = existingMember.image;
     if (req.file) {
-      imageBase64 = getImageBase64(req.file);
+      imageUrl = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result.secure_url);
+        });
+        stream.end(req.file.buffer);
+      });
     }
 
     existingMember.name = name || existingMember.name;
@@ -145,7 +154,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     existingMember.socials = socials
       ? JSON.parse(socials)
       : existingMember.socials;
-    existingMember.image = imageBase64;
+    existingMember.image = imageUrl;
 
     await existingMember.save();
     res.status(200).json(existingMember);
@@ -204,7 +213,5 @@ router.put("/validity/:id", async (req, res) => {
   if (!member) return res.status(404).json({ error: "Member not found" });
   res.json(member);
 });
-
-
 
 export default router;
