@@ -157,12 +157,10 @@ router.put("/profile/:id", async (req, res) => {
       bio,
     } = req.body;
 
-    // Basic validation
     if (!name || !email) {
       return res.status(400).json({ message: "Name and email are required" });
     }
 
-    // Validate image size (max 5MB as base64)
     if (image && image.length > 7 * 1024 * 1024) {
       return res.status(400).json({ message: "Image size exceeds 5MB" });
     }
