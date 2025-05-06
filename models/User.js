@@ -9,7 +9,21 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  
+  studentId: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  bloodGroup: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  dateOfBirth: {
+    type: String, // Store as string for flexibility (e.g., 'YYYY-MM-DD')
+    required: false,
+    default: "",
+  },
   customId: {
     type: String,
     required: true,

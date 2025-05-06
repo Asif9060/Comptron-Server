@@ -26,7 +26,7 @@ const generateUniqueId = async () => {
 // Register new user with Cloudinary image upload
 router.post("/register", upload.single("image"), async (req, res) => {
   try {
-    const { name, email, phone, skills, gender, password } = req.body;
+    const { name, email, phone, skills, gender, password, studentId, bloodGroup, dateOfBirth } = req.body;
     let imageUrl = req.body.image;
 
     if (req.file) {
@@ -51,6 +51,9 @@ router.post("/register", upload.single("image"), async (req, res) => {
       image: imageUrl,
       password,
       validityDate,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     });
 
     await newUser.save();
@@ -165,6 +168,9 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
       portfolio,
       cv,
       bio,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     } = req.body;
 
     let imageUrl = req.body.image;
@@ -191,6 +197,9 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
       portfolio,
       cv,
       bio,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     };
 
     const user = await User.findOneAndUpdate(
