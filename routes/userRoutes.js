@@ -1,6 +1,8 @@
 import express from "express";
 import User from "../models/User.js";
 import Event from "../models/Event.js";
+import upload from "../middleware/upload.js";
+import cloudinary from "../config/cloudinary.js";
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -21,10 +23,29 @@ const generateUniqueId = async () => {
   return `CGM${year}-${randomDigits}`;
 };
 
-// Register new user
-router.post("/register", async (req, res) => {
+// Register new user with Cloudinary image upload
+router.post("/register", upload.single("image"), async (req, res) => {
   try {
-    const { name, email, phone, skills, image, gender, password } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      skills,
+      gender,
+      password,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
+    } = req.body;
+    let imageUrl = req.body.image;
+
+    if (req.file) {
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+      });
+      imageUrl = result.secure_url;
+    }
 
     const customId = await generateUniqueId();
     const validityDate = new Date();
@@ -37,9 +58,12 @@ router.post("/register", async (req, res) => {
       skills,
       customId,
       gender,
-      image,
+      image: imageUrl,
       password,
       validityDate,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     });
 
     await newUser.save();
@@ -140,48 +164,52 @@ router.put("/validate/:id", async (req, res) => {
   }
 });
 
-// Update user profile by customId
-router.put("/profile/:id", async (req, res) => {
+// Update user profile by customId with Cloudinary image upload
+router.put("/profile/:id", upload.single("image"), async (req, res) => {
   try {
     const {
       name,
       skills,
       email,
       phone,
-      image,
       linkedIn,
       github,
       gender,
       portfolio,
       cv,
       bio,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     } = req.body;
 
-    // Basic validation
+    let imageUrl = req.body.image;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+      });
+      imageUrl = result.secure_url;
+    }
+
     if (!name || !email) {
       return res.status(400).json({ message: "Name and email are required" });
     }
-
-    // Validate image size (max 5MB as base64)
-    if (image && image.length > 7 * 1024 * 1024) {
-      return res.status(400).json({ message: "Image size exceeds 5MB" });
-    }
-
-    // const validityDate = new Date();
-    // validityDate.setFullYear(validityDate.getFullYear() + 1); // Extend validity by 1 year
 
     const updateData = {
       name,
       skills,
       email,
       phone,
-      image,
+      image: imageUrl,
       linkedIn,
       github,
       gender,
       portfolio,
       cv,
       bio,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
     };
 
     const user = await User.findOneAndUpdate(
