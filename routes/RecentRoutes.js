@@ -6,12 +6,21 @@ import cloudinary from '../config/cloudinary.js';
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+<<<<<<< HEAD
+=======
+
+// Add new event image (store as Cloudinary URL)
+>>>>>>> 5aa4abf44016582c19c3ca5b757534d3a68e3192
 router.post("/", upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let imageUrl = null;
         if (req.file) {
+<<<<<<< HEAD
             
+=======
+            // Upload to Cloudinary
+>>>>>>> 5aa4abf44016582c19c3ca5b757534d3a68e3192
             const result = await cloudinary.uploader.upload_stream({ resource_type: 'image' }, async (error, result) => {
                 if (error) throw error;
                 imageUrl = result.secure_url;
@@ -83,6 +92,7 @@ router.delete("/:id", async (req, res) => {
 
 export default router;
 
+<<<<<<< HEAD
 
 
 
@@ -153,3 +163,5 @@ export default router;
 
 // export default router;
 
+=======
+>>>>>>> 5aa4abf44016582c19c3ca5b757534d3a68e3192

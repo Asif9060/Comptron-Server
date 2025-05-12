@@ -26,6 +26,7 @@ const generateUniqueId = async () => {
 // Register new user with Cloudinary image upload
 router.post("/register", upload.single("image"), async (req, res) => {
   try {
+<<<<<<< HEAD
     const {
       name,
       email,
@@ -37,6 +38,9 @@ router.post("/register", upload.single("image"), async (req, res) => {
       bloodGroup,
       dateOfBirth,
     } = req.body;
+=======
+    const { name, email, phone, skills, gender, password, studentId, bloodGroup, dateOfBirth } = req.body;
+>>>>>>> 5aa4abf44016582c19c3ca5b757534d3a68e3192
     let imageUrl = req.body.image;
 
     if (req.file) {
