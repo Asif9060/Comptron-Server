@@ -6,6 +6,7 @@ import cloudinary from "../config/cloudinary.js";
 import PendingUser from '../models/PendingUser.js';
 import RejectedUser from '../models/RejectedUser.js';
 import sendMail from "../utils/mailSender.js";
+import admin from '../config/firebase.js';
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -354,7 +355,6 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       phone,
       skills,
       gender,
-      firebaseUserId,
       password,
       studentId,
       bloodGroup,
@@ -390,8 +390,8 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       skills,
       gender,
       image: imageUrl,
-      firebaseUserId,
-      password,
+      // firebaseUserId is now optional and will be created upon approval
+      password, // Save password for creating Firebase account later
       studentId,
       bloodGroup,
       dateOfBirth,
@@ -400,21 +400,10 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
     await newPendingUser.save();
     console.log("Pending user saved:", newPendingUser._id);
 
-    // Send confirmation email to user
-    try {
-      const emailText = `Dear ${name},\n\nThank you for registering with Comptron. Your registration has been received and is pending admin approval.\n\nYou will receive another email once your account has been approved.\n\nBest regards,\nThe Comptron Team`;
-      
-      await sendMail(
-        email,
-        "Registration Received - Comptron",
-        emailText
-      );
-    } catch (emailError) {
-      console.error("Failed to send user confirmation email:", emailError);
-      // Continue with the registration process even if email fails
-    }
-
-    res.status(201).json({ message: "Registration submitted for approval", user: newPendingUser });
+    res.status(201).json({ 
+      message: "Registration submitted for approval",
+      userId: newPendingUser._id
+    });
   } catch (error) {
     console.error("Error in pending registration:", error);
     res.status(500).json({ error: error.message });
@@ -445,6 +434,24 @@ router.post("/approve/:id", async (req, res) => {
     
     console.log("Found pending user:", pendingUser.email);
 
+    // Create Firebase user using Admin SDK
+    let firebaseUser;
+    try {
+      firebaseUser = await admin.auth().createUser({
+        email: pendingUser.email,
+        password: pendingUser.password,
+        displayName: pendingUser.name,
+        disabled: false
+      });
+      console.log("Firebase user created with UID:", firebaseUser.uid);
+    } catch (firebaseError) {
+      console.error("Error creating Firebase user:", firebaseError);
+      return res.status(500).json({ 
+        message: "Failed to create Firebase account", 
+        error: firebaseError.message 
+      });
+    }
+
     // Create a new user in the main Users collection
     const customId = await generateUniqueId();
     const validityDate = new Date();
@@ -458,6 +465,7 @@ router.post("/approve/:id", async (req, res) => {
       skills: pendingUser.skills || "",
       gender: pendingUser.gender || "Male", // Default to Male if not provided
       image: pendingUser.image || "",
+      firebaseUserId: firebaseUser.uid, // Use the new Firebase UID
       customId: customId,
       password: pendingUser.password || "defaultPassword123", // Provide a default password
       validityDate: validityDate,
@@ -486,7 +494,7 @@ router.post("/approve/:id", async (req, res) => {
     
     // Send an approval notification email
     try {
-      const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
+      const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nYou can log in using your email (${pendingUser.email}) and the password you provided during registration.\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
       
       await sendMail(
         pendingUser.email,
@@ -515,6 +523,18 @@ router.post("/reject/:id", async (req, res) => {
       return res.status(404).json({ message: "Pending user not found" });
     }
 
+    // Check if a Firebase user already exists (shouldn't in new workflow but just in case)
+    if (pendingUser.firebaseUserId) {
+      try {
+        // Try to delete the Firebase user if it exists
+        await admin.auth().deleteUser(pendingUser.firebaseUserId);
+        console.log(`Firebase user ${pendingUser.firebaseUserId} deleted for rejected user ${pendingUser.email}`);
+      } catch (firebaseError) {
+        // If user doesn't exist, that's fine, continue with rejection
+        console.log(`Could not delete Firebase user (may not exist): ${firebaseError.message}`);
+      }
+    }
+
     // Optionally move to rejected users collection for record keeping
     const rejectedUser = new RejectedUser({
       name: pendingUser.name,
@@ -523,7 +543,6 @@ router.post("/reject/:id", async (req, res) => {
       skills: pendingUser.skills,
       gender: pendingUser.gender,
       image: pendingUser.image,
-      firebaseUserId: pendingUser.firebaseUserId,
       rejectionReason: req.body.reason || "Not specified",
       rejectedAt: new Date()
     });
@@ -532,6 +551,21 @@ router.post("/reject/:id", async (req, res) => {
     
     // Remove from pending collection
     await PendingUser.findByIdAndDelete(req.params.id);
+    
+    // Send rejection email
+    try {
+      const emailText = `Dear ${pendingUser.name},\n\nWe regret to inform you that your registration with Comptron has been rejected.\n\n${req.body.reason ? `Reason: ${req.body.reason}` : ''}\n\nIf you believe this is a mistake or have questions, please contact our support team.\n\nBest regards,\nThe Comptron Team`;
+      
+      await sendMail(
+        pendingUser.email,
+        "Comptron Registration Status",
+        emailText
+      );
+      console.log("Rejection email sent to:", pendingUser.email);
+    } catch (emailError) {
+      console.error("Failed to send rejection email:", emailError);
+      // Continue with the rejection process even if email fails
+    }
     
     res.status(200).json({ message: "User rejected successfully" });
   } catch (error) {
@@ -565,6 +599,23 @@ router.post("/bulk-approve", async (req, res) => {
           continue;
         }
         
+        // Create Firebase user
+        let firebaseUser;
+        try {
+          firebaseUser = await admin.auth().createUser({
+            email: pendingUser.email,
+            password: pendingUser.password,
+            displayName: pendingUser.name,
+            disabled: false
+          });
+          console.log(`Firebase user created for ${pendingUser.email} with UID: ${firebaseUser.uid}`);
+        } catch (firebaseError) {
+          console.error(`Error creating Firebase user for ${pendingUser.email}:`, firebaseError);
+          results.failed++;
+          results.errors.push(`Failed to create Firebase account for ${pendingUser.email}: ${firebaseError.message}`);
+          continue;
+        }
+        
         // Create in main users collection
         const customId = await generateUniqueId();
         const validityDate = new Date();
@@ -577,9 +628,10 @@ router.post("/bulk-approve", async (req, res) => {
           skills: pendingUser.skills,
           gender: pendingUser.gender,
           image: pendingUser.image,
-          firebaseUserId: pendingUser.firebaseUserId,
+          firebaseUserId: firebaseUser.uid,
           customId,
           validityDate,
+          password: pendingUser.password,
           studentId: pendingUser.studentId,
           bloodGroup: pendingUser.bloodGroup,
           dateOfBirth: pendingUser.dateOfBirth,
@@ -591,7 +643,7 @@ router.post("/bulk-approve", async (req, res) => {
         
         // Send approval email
         try {
-          const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
+          const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nYou can log in using your email (${pendingUser.email}) and the password you provided during registration.\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
           
           sendMail(
             pendingUser.email,
