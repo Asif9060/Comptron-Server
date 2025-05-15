@@ -637,4 +637,26 @@ router.post("/bulk-approve", async (req, res) => {
   }
 });
 
+// Check if a user is in the pending collection
+router.get("/pending/check/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return res.status(400).json({ error: "Email parameter is required" });
+    }
+    
+    // Check if user exists in pending collection
+    const pendingUser = await PendingUser.findOne({ email });
+    
+    res.status(200).json({ 
+      isPending: !!pendingUser,
+      email
+    });
+  } catch (error) {
+    console.error("Error checking pending user:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
