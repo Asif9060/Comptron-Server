@@ -32,6 +32,10 @@ const pendingUserSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    password: {
+      type: String,
+      required: false, // Make this optional as we might use Firebase auth
+    },
     studentId: {
       type: String,
       default: "",
