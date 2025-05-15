@@ -29,11 +29,12 @@ const pendingUserSchema = new mongoose.Schema(
     },
     firebaseUserId: {
       type: String,
-      required: false, // Now optional, will be created upon approval
+      required: true,
+      unique: true,
     },
     password: {
       type: String,
-      required: true, // Password is required to create the Firebase account later
+      required: false, // Make this optional as we might use Firebase auth
     },
     studentId: {
       type: String,
