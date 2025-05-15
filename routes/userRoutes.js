@@ -304,6 +304,7 @@ router.get("/stats", async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isValid: true });
+    const pendingUsers = await PendingUser.countDocuments();
     const upcomingEvents = await Event.countDocuments({
       date: { $gte: new Date() },
     });
@@ -311,6 +312,7 @@ router.get("/stats", async (req, res) => {
     res.json({
       totalUsers,
       activeUsers,
+      pendingUsers,
       upcomingEvents,
     });
   } catch (error) {
@@ -424,27 +426,6 @@ router.get("/pending", async (req, res) => {
   try {
     const pendingUsers = await PendingUser.find().sort({ createdAt: -1 });
     res.status(200).json(pendingUsers);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get count of pending users for dashboard
-router.get("/stats", async (req, res) => {
-  try {
-    const totalUsers = await User.countDocuments();
-    const pendingUsers = await PendingUser.countDocuments();
-    const activeUsers = await User.countDocuments({ status: "active" });
-    const upcomingEvents = await Event.countDocuments({
-      date: { $gte: new Date() },
-    });
-    
-    res.status(200).json({
-      totalUsers,
-      pendingUsers,
-      activeUsers,
-      upcomingEvents
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
