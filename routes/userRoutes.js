@@ -3,6 +3,8 @@ import User from "../models/User.js";
 import Event from "../models/Event.js";
 import upload from "../middleware/upload.js";
 import cloudinary from "../config/cloudinary.js";
+import PendingUser from '../models/PendingUser.js';
+import RejectedUser from '../models/RejectedUser.js';
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -337,6 +339,280 @@ router.get("/byYear", async (req, res) => {
     res.json(usersByYear);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users by year", error });
+  }
+});
+
+// Get all pending users
+router.get("/pending", async (req, res) => {
+  try {
+    const pendingUsers = await PendingUser.find().sort({ createdAt: -1 });
+    res.status(200).json(pendingUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get count of pending users for dashboard
+router.get("/stats", async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const pendingUsers = await PendingUser.countDocuments();
+    const activeUsers = await User.countDocuments({ status: "active" });
+    const deletedUsers = await User.countDocuments({ status: "deleted" });
+    
+    // Add any other stats you might need
+    res.status(200).json({
+      totalUsers,
+      pendingUsers,
+      activeUsers,
+      deletedUsers
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Approve a user
+router.post("/approve/:id", async (req, res) => {
+  try {
+    // Find the pending user
+    const pendingUser = await PendingUser.findById(req.params.id);
+    if (!pendingUser) {
+      return res.status(404).json({ message: "Pending user not found" });
+    }
+
+    // Create a new user in the main Users collection
+    const newUser = new User({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      phone: pendingUser.phone,
+      skills: pendingUser.skills,
+      gender: pendingUser.gender,
+      image: pendingUser.image,
+      firebaseUserId: pendingUser.firebaseUserId,
+      customId: await generateUniqueId(),
+      studentId: pendingUser.studentId,
+      bloodGroup: pendingUser.bloodGroup,
+      dateOfBirth: pendingUser.dateOfBirth,
+      status: "active"
+    });
+
+    // Save the new user
+    await newUser.save();
+    
+    // Remove the user from the pending collection
+    await PendingUser.findByIdAndDelete(req.params.id);
+    
+    // Send an approval notification email
+    try {
+      await sendEmail({
+        email: pendingUser.email,
+        subject: "Account Approved - Welcome to Comptron",
+        message: `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`
+      });
+    } catch (emailError) {
+      console.error("Failed to send approval email:", emailError);
+      // Continue with the approval process even if email fails
+    }
+
+    res.status(200).json({ message: "User approved successfully", user: newUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reject a user
+router.post("/reject/:id", async (req, res) => {
+  try {
+    // Find the pending user
+    const pendingUser = await PendingUser.findById(req.params.id);
+    if (!pendingUser) {
+      return res.status(404).json({ message: "Pending user not found" });
+    }
+
+    // Optionally move to rejected users collection for record keeping
+    const rejectedUser = new RejectedUser({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      phone: pendingUser.phone,
+      skills: pendingUser.skills,
+      gender: pendingUser.gender,
+      image: pendingUser.image,
+      firebaseUserId: pendingUser.firebaseUserId,
+      rejectionReason: req.body.reason || "Not specified",
+      rejectedAt: new Date()
+    });
+
+    await rejectedUser.save();
+    
+    // Send a rejection notification email
+    try {
+      await sendEmail({
+        email: pendingUser.email,
+        subject: "Registration Status Update - Comptron",
+        message: `Dear ${pendingUser.name},\n\nThank you for your interest in joining Comptron. After reviewing your application, we regret to inform you that we are unable to approve your registration at this time.\n\n${req.body.reason ? `Reason: ${req.body.reason}` : ''}\n\nIf you have any questions, please feel free to contact us.\n\nBest regards,\nThe Comptron Team`
+      });
+    } catch (emailError) {
+      console.error("Failed to send rejection email:", emailError);
+      // Continue with the rejection process even if email fails
+    }
+
+    // Remove from pending collection
+    await PendingUser.findByIdAndDelete(req.params.id);
+    
+    res.status(200).json({ message: "User rejected successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Bulk approve users
+router.post("/bulk-approve", async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "No user IDs provided" });
+    }
+    
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+    
+    // Process each user sequentially
+    for (const userId of userIds) {
+      try {
+        // Find the pending user
+        const pendingUser = await PendingUser.findById(userId);
+        if (!pendingUser) {
+          results.failed++;
+          results.errors.push(`User ${userId} not found`);
+          continue;
+        }
+        
+        // Create in main users collection
+        const newUser = new User({
+          name: pendingUser.name,
+          email: pendingUser.email,
+          phone: pendingUser.phone,
+          skills: pendingUser.skills,
+          gender: pendingUser.gender,
+          image: pendingUser.image,
+          firebaseUserId: pendingUser.firebaseUserId,
+          customId: await generateUniqueId(),
+          studentId: pendingUser.studentId,
+          bloodGroup: pendingUser.bloodGroup,
+          dateOfBirth: pendingUser.dateOfBirth,
+          status: "active"
+        });
+        
+        await newUser.save();
+        await PendingUser.findByIdAndDelete(userId);
+        
+        // Send approval email (async without waiting)
+        sendEmail({
+          email: pendingUser.email,
+          subject: "Account Approved - Welcome to Comptron",
+          message: `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`
+        }).catch(err => console.error(`Failed to send approval email to ${pendingUser.email}:`, err));
+        
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push(`Error processing ${userId}: ${error.message}`);
+      }
+    }
+    
+    res.status(200).json({
+      message: `Processed ${userIds.length} users. ${results.success} approved, ${results.failed} failed.`,
+      results
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Register a new pending user
+router.post("/pending/register", upload.single("image"), async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone,
+      skills,
+      gender,
+      firebaseUserId,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
+    } = req.body;
+    let imageUrl = req.body.image;
+
+    if (req.file) {
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+      });
+      imageUrl = result.secure_url;
+    }
+
+    // Check if the user already exists in the main collection
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User with this email already exists" });
+    }
+
+    // Check if the user is already in the pending collection
+    const existingPendingUser = await PendingUser.findOne({ email });
+    if (existingPendingUser) {
+      return res.status(400).json({ error: "Registration already pending approval" });
+    }
+
+    // Create a new pending user
+    const newPendingUser = new PendingUser({
+      name,
+      email,
+      phone,
+      skills,
+      gender,
+      image: imageUrl,
+      firebaseUserId,
+      studentId,
+      bloodGroup,
+      dateOfBirth,
+    });
+
+    await newPendingUser.save();
+
+    // Send email notification to admin (optional)
+    try {
+      await sendEmail({
+        email: "admin@comptron.com", // Admin email
+        subject: "New User Registration Pending Approval",
+        message: `A new user has registered and is pending approval:\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nPlease login to the admin dashboard to review this registration.`
+      });
+    } catch (emailError) {
+      console.error("Failed to send admin notification email:", emailError);
+      // Continue with the registration process even if email fails
+    }
+
+    // Send confirmation email to user
+    try {
+      await sendEmail({
+        email: email,
+        subject: "Registration Received - Comptron",
+        message: `Dear ${name},\n\nThank you for registering with Comptron. Your registration has been received and is pending admin approval.\n\nYou will receive another email once your account has been approved.\n\nBest regards,\nThe Comptron Team`
+      });
+    } catch (emailError) {
+      console.error("Failed to send user confirmation email:", emailError);
+      // Continue with the registration process even if email fails
+    }
+
+    res.status(201).json({ message: "Registration submitted for approval", user: newPendingUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
