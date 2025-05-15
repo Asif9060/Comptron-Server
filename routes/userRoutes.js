@@ -353,6 +353,7 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       skills,
       gender,
       firebaseUserId,
+      password,
       studentId,
       bloodGroup,
       dateOfBirth,
@@ -388,12 +389,14 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       gender,
       image: imageUrl,
       firebaseUserId,
+      password,
       studentId,
       bloodGroup,
       dateOfBirth,
     });
 
     await newPendingUser.save();
+    console.log("Pending user saved:", newPendingUser._id);
 
     // Send confirmation email to user
     try {
@@ -411,6 +414,7 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
 
     res.status(201).json({ message: "Registration submitted for approval", user: newPendingUser });
   } catch (error) {
+    console.error("Error in pending registration:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -449,38 +453,55 @@ router.get("/stats", async (req, res) => {
 // Approve a user
 router.post("/approve/:id", async (req, res) => {
   try {
+    console.log("Approving user with ID:", req.params.id);
+    
     // Find the pending user
     const pendingUser = await PendingUser.findById(req.params.id);
     if (!pendingUser) {
+      console.log("Pending user not found:", req.params.id);
       return res.status(404).json({ message: "Pending user not found" });
     }
+    
+    console.log("Found pending user:", pendingUser.email);
 
     // Create a new user in the main Users collection
     const customId = await generateUniqueId();
     const validityDate = new Date();
     validityDate.setFullYear(validityDate.getFullYear() + 1); // Valid for 1 year
 
-    const newUser = new User({
+    // Create user object with all required fields based on User model
+    const newUserData = {
       name: pendingUser.name,
       email: pendingUser.email,
-      phone: pendingUser.phone,
-      skills: pendingUser.skills,
-      gender: pendingUser.gender,
-      image: pendingUser.image,
-      firebaseUserId: pendingUser.firebaseUserId,
-      customId,
-      validityDate,
-      studentId: pendingUser.studentId,
-      bloodGroup: pendingUser.bloodGroup,
-      dateOfBirth: pendingUser.dateOfBirth,
-      status: "active"
-    });
+      phone: pendingUser.phone || "",
+      skills: pendingUser.skills || "",
+      gender: pendingUser.gender || "Male", // Default to Male if not provided
+      image: pendingUser.image || "",
+      customId: customId,
+      password: pendingUser.password || "defaultPassword123", // Provide a default password
+      validityDate: validityDate,
+      linkedIn: "",
+      github: "",
+      portfolio: "",
+      cv: ""
+    };
+    
+    // Add optional fields only if they exist
+    if (pendingUser.studentId) newUserData.studentId = pendingUser.studentId;
+    if (pendingUser.bloodGroup) newUserData.bloodGroup = pendingUser.bloodGroup;
+    if (pendingUser.dateOfBirth) newUserData.dateOfBirth = pendingUser.dateOfBirth;
+    
+    console.log("Creating new user with data:", { ...newUserData, password: "[HIDDEN]" });
+    
+    const newUser = new User(newUserData);
 
     // Save the new user
     await newUser.save();
+    console.log("User saved successfully with ID:", newUser._id);
     
     // Remove the user from the pending collection
     await PendingUser.findByIdAndDelete(req.params.id);
+    console.log("Removed from pending collection");
     
     // Send an approval notification email
     try {
@@ -491,6 +512,7 @@ router.post("/approve/:id", async (req, res) => {
         "Account Approved - Welcome to Comptron",
         emailText
       );
+      console.log("Approval email sent to:", pendingUser.email);
     } catch (emailError) {
       console.error("Failed to send approval email:", emailError);
       // Continue with the approval process even if email fails
@@ -498,7 +520,8 @@ router.post("/approve/:id", async (req, res) => {
 
     res.status(200).json({ message: "User approved successfully", user: newUser });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in approve route:", error.stack || error);
+    res.status(500).json({ error: error.message || "Internal server error during approval" });
   }
 });
 
