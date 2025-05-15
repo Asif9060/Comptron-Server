@@ -37,10 +37,6 @@ const rejectedUserSchema = new mongoose.Schema(
     rejectedAt: {
       type: Date,
       default: Date.now,
-    },
-    rejectedBy: {
-      type: String,
-      default: "admin",
     }
   },
   { timestamps: true }
