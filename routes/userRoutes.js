@@ -437,6 +437,14 @@ router.post("/approve/:id", async (req, res) => {
     // Create Firebase user using Admin SDK
     let firebaseUser;
     try {
+      // Log the data we're using to create the user
+      console.log("Creating Firebase user with:", {
+        email: pendingUser.email,
+        displayName: pendingUser.name,
+        // Don't log the actual password
+        password: "********"
+      });
+      
       firebaseUser = await admin.auth().createUser({
         email: pendingUser.email,
         password: pendingUser.password,
@@ -445,10 +453,11 @@ router.post("/approve/:id", async (req, res) => {
       });
       console.log("Firebase user created with UID:", firebaseUser.uid);
     } catch (firebaseError) {
-      console.error("Error creating Firebase user:", firebaseError);
+      console.error("Error creating Firebase user:", firebaseError.code, firebaseError.message);
       return res.status(500).json({ 
         message: "Failed to create Firebase account", 
-        error: firebaseError.message 
+        error: firebaseError.message,
+        code: firebaseError.code
       });
     }
 
@@ -602,6 +611,14 @@ router.post("/bulk-approve", async (req, res) => {
         // Create Firebase user
         let firebaseUser;
         try {
+          // Log the data we're using to create the user
+          console.log(`Creating Firebase user for ${pendingUser.email} with:`, {
+            email: pendingUser.email,
+            displayName: pendingUser.name,
+            // Don't log the actual password
+            password: "********"
+          });
+          
           firebaseUser = await admin.auth().createUser({
             email: pendingUser.email,
             password: pendingUser.password,
@@ -610,9 +627,10 @@ router.post("/bulk-approve", async (req, res) => {
           });
           console.log(`Firebase user created for ${pendingUser.email} with UID: ${firebaseUser.uid}`);
         } catch (firebaseError) {
-          console.error(`Error creating Firebase user for ${pendingUser.email}:`, firebaseError);
+          console.error(`Error creating Firebase user for ${pendingUser.email}:`, 
+            firebaseError.code, firebaseError.message);
           results.failed++;
-          results.errors.push(`Failed to create Firebase account for ${pendingUser.email}: ${firebaseError.message}`);
+          results.errors.push(`Failed to create Firebase account for ${pendingUser.email}: ${firebaseError.message} (code: ${firebaseError.code})`);
           continue;
         }
         
