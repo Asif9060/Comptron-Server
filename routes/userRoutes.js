@@ -38,6 +38,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       password,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     } = req.body;
     let imageUrl = req.body.image;
@@ -66,6 +67,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
       validityDate,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     });
 
@@ -183,6 +185,7 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
       bio,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     } = req.body;
 
@@ -212,6 +215,7 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
       bio,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     };
 
@@ -358,6 +362,7 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       password,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     } = req.body;
     let imageUrl = req.body.image;
@@ -394,6 +399,7 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
       password,
       studentId,
       bloodGroup,
+      department,
       dateOfBirth,
     });
 
@@ -458,18 +464,23 @@ router.post("/approve/:id", async (req, res) => {
       skills: pendingUser.skills || "",
       gender: pendingUser.gender || "Male", // Default to Male if not provided
       image: pendingUser.image || "",
-      customId: customId,
+      customId,
       password: pendingUser.password || "defaultPassword123", // Provide a default password
-      validityDate: validityDate,
+      validityDate,
       linkedIn: "",
       github: "",
       portfolio: "",
-      cv: ""
+      cv: "",
+      department: pendingUser.department || "",
+      studentId: pendingUser.studentId,
+      bloodGroup: pendingUser.bloodGroup,
+      dateOfBirth: pendingUser.dateOfBirth,
     };
     
     // Add optional fields only if they exist
     if (pendingUser.studentId) newUserData.studentId = pendingUser.studentId;
     if (pendingUser.bloodGroup) newUserData.bloodGroup = pendingUser.bloodGroup;
+    if (pendingUser.department) newUserData.department = pendingUser.department;
     if (pendingUser.dateOfBirth) newUserData.dateOfBirth = pendingUser.dateOfBirth;
     
     console.log("Creating new user with data:", { ...newUserData, password: "[HIDDEN]" });
@@ -582,6 +593,7 @@ router.post("/bulk-approve", async (req, res) => {
           validityDate,
           studentId: pendingUser.studentId,
           bloodGroup: pendingUser.bloodGroup,
+          department: pendingUser.department,
           dateOfBirth: pendingUser.dateOfBirth,
           status: "active"
         });

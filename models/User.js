@@ -19,6 +19,11 @@ const UserSchema = new mongoose.Schema({
     required: false,
     default: "",
   },
+  department: {
+    type: String,
+    required: false,
+    default: "",
+  },
   dateOfBirth: {
     type: String, // Store as string for flexibility (e.g., 'YYYY-MM-DD')
     required: false,
