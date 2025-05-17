@@ -44,6 +44,10 @@ const pendingUserSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    department: {
+      type: String,
+      default: "",
+    },
     dateOfBirth: {
       type: Date,
     },
