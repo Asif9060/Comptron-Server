@@ -74,9 +74,34 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
     try {
-        await EventImage.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Image deleted successfully" });
+        const image = await AboutImage.findById(req.params.id);
+        if (!image) {
+            return res.status(404).json({ message: "Image not found" });
+        }
+
+        // Extract public_id from imageUrl
+        // Assuming imageUrl is like "http://res.cloudinary.com/cloud_name/image/upload/v1234567890/public_id.jpg"
+        // Or "https://res.cloudinary.com/cloud_name/image/upload/v1234567890/public_id.jpg"
+        if (image.imageUrl) {
+            const imageUrlParts = image.imageUrl.split('/');
+            const publicIdWithExtension = imageUrlParts[imageUrlParts.length -1];
+            const public_id = publicIdWithExtension.split('.')[0];
+            
+            // Delete from Cloudinary
+            await cloudinary.uploader.destroy(public_id, (error, result) => {
+                if (error) {
+                    console.error("Cloudinary delete error:", error);
+                    // Decide if you want to stop or continue if Cloudinary deletion fails
+                    // For now, we'll log the error and proceed to delete from DB
+                }
+                console.log("Cloudinary delete result:", result);
+            });
+        }
+
+        await AboutImage.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Image deleted successfully from Cloudinary and database" });
     } catch (error) {
+        console.error("Error deleting image:", error);
         res.status(500).json({ error: error.message });
     }
 });
