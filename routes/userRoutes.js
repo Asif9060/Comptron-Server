@@ -327,9 +327,7 @@ router.get("/stats", async (req, res) => {
 // New route to fetch users grouped by year of validation
 router.get("/byYear", async (req, res) => {
   try {
-    const users = await User.find();
-
-    // Group users by year of validation
+    const users = await User.find();    // Group users by year of validation
     const usersByYear = users.reduce((acc, user) => {
       const year = user.validityDate.getFullYear();
       if (!acc[year]) {
@@ -338,7 +336,22 @@ router.get("/byYear", async (req, res) => {
       acc[year].push({
         id: user._id,
         name: user.name,
+        email: user.email,
+        phone: user.phone,
+        skills: user.skills,
+        bio: user.bio,
+        studentId: user.studentId,
+        bloodGroup: user.bloodGroup,
+        department: user.department,
+        dateOfBirth: user.dateOfBirth,
         customId: user.customId,
+        gender: user.gender,
+        linkedIn: user.linkedIn,
+        github: user.github,
+        portfolio: user.portfolio,
+        cv: user.cv,
+        validityDate: user.validityDate,
+        isValid: user.validityDate >= new Date()
       });
       return acc;
     }, {});
