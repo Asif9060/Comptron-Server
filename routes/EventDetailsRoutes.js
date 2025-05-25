@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
-import cloudinary from '../config/cloudinary.js';
+import cloudinary from "../config/cloudinary.js";
 
 const router = express.Router();
 
@@ -31,37 +31,44 @@ router.post(
         !endDate ||
         !endTime
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Title, description, start date/time, and end date/time are required.",
-          });
+        return res.status(400).json({
+          message:
+            "Title, description, start date/time, and end date/time are required.",
+        });
       }
 
       let mainImage = null;
       if (req.files["mainImage"]) {
         const file = req.files["mainImage"][0];
         mainImage = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-            if (error) reject(error);
-            else resolve(result.secure_url);
-          });
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: "image" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
           stream.end(file.buffer);
         });
       }
 
       let galleryImages = [];
       if (req.files["galleryImages"]) {
-        galleryImages = await Promise.all(req.files["galleryImages"].map(file =>
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-              if (error) reject(error);
-              else resolve(result.secure_url);
-            });
-            stream.end(file.buffer);
-          })
-        ));
+        galleryImages = await Promise.all(
+          req.files["galleryImages"].map(
+            (file) =>
+              new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                  { resource_type: "image" },
+                  (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result.secure_url);
+                  }
+                );
+                stream.end(file.buffer);
+              })
+          )
+        );
       }
 
       const startDateTime = moment.tz(
@@ -81,14 +88,21 @@ router.post(
         formConfig = JSON.parse(req.body.registrationForm);
       }
 
+      // Parse bullet points if they exist
+      let bulletPoints = [];
+      if (req.body.bulletPoints) {
+        bulletPoints = JSON.parse(req.body.bulletPoints);
+      }
+
       const event = new Event({
         title,
         description,
+        bulletPoints,
         mainImage,
         galleryImages,
         startDateTime,
         endDateTime,
-        registrationForm: formConfig // Add registration form configuration
+        registrationForm: formConfig,
       });
 
       await event.save();
@@ -129,25 +143,26 @@ router.get("/", async (req, res) => {
 // Get a single event by ID
 router.get("/:id", async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id)
-      .select({
-        title: 1,
-        description: 1,
-        mainImage: 1,
-        galleryImages: 1,
-        startDateTime: 1,
-        endDateTime: 1,
-        registrationForm: 1, // Explicitly include registration form data
-        createdAt: 1
-      });
-      
+    const event = await Event.findById(req.params.id).select({
+      title: 1,
+      description: 1,
+      mainImage: 1,
+      galleryImages: 1,
+      startDateTime: 1,
+      endDateTime: 1,
+      registrationForm: 1, // Explicitly include registration form data
+      createdAt: 1,
+    });
+
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
     res.json(event);
   } catch (error) {
     console.error("Error fetching event:", error);
-    res.status(500).json({ message: "Error fetching event details", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching event details", error: error.message });
   }
 });
 
@@ -166,6 +181,11 @@ router.put(
       if (title) updates.title = title;
       if (description) updates.description = description;
 
+      // Handle bullet points updates
+      if (req.body.bulletPoints) {
+        updates.bulletPoints = JSON.parse(req.body.bulletPoints);
+      }
+
       if (startDate && startTime) {
         updates.startDateTime = moment
           .tz(`${startDate} ${startTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
@@ -181,24 +201,33 @@ router.put(
       if (req.files["mainImage"]) {
         const file = req.files["mainImage"][0];
         updates.mainImage = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-            if (error) reject(error);
-            else resolve(result.secure_url);
-          });
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: "image" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
           stream.end(file.buffer);
         });
       }
 
       if (req.files["galleryImages"]) {
-        updates.galleryImages = await Promise.all(req.files["galleryImages"].map(file =>
-          new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, (error, result) => {
-              if (error) reject(error);
-              else resolve(result.secure_url);
-            });
-            stream.end(file.buffer);
-          })
-        ));
+        updates.galleryImages = await Promise.all(
+          req.files["galleryImages"].map(
+            (file) =>
+              new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                  { resource_type: "image" },
+                  (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result.secure_url);
+                  }
+                );
+                stream.end(file.buffer);
+              })
+          )
+        );
       }
 
       // Handle registration form updates
@@ -212,12 +241,9 @@ router.put(
         { new: true }
       );
 
-      if (!event)
-        return res.status(404).json({ message: "Event not found" });
+      if (!event) return res.status(404).json({ message: "Event not found" });
 
-      res
-        .status(200)
-        .json({ message: "Event updated successfully", event });
+      res.status(200).json({ message: "Event updated successfully", event });
     } catch (error) {
       res.status(500).json({ message: "Error updating event", error });
     }
