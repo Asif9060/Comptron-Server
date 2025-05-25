@@ -170,7 +170,8 @@ router.get("/:id", async (req, res) => {
 router.put(
   "/:id",
   upload.fields([
-    { name: "
+    { name: "mainImage", maxCount: 1 },
+    { name: "galleryImages", maxCount: 6 }
   ]),
   async (req, res) => {
     try {
