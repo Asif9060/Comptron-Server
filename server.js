@@ -5,15 +5,16 @@ import cors from "cors";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import memberRoutes from "./routes/memberRoutes.js";
-import eventRoutes from "./routes/eventRoutes.js"
+import eventRoutes from "./routes/eventRoutes.js";
 import newsRoutes from './routes/newsRoutes.js';
 import RecentRoutes from "./routes/RecentRoutes.js";
-import EventDetailsRoutes from "./routes/EventDetailsRoutes.js"
+import EventDetailsRoutes from "./routes/EventDetailsRoutes.js";
 import bodyParser from "body-parser";
 import commentRoutes from "./routes/comments.js";
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/auth.js';
 import AboutImageRoutes from "./routes/AboutImageRoutes.js";
+import formRoutes from './routes/formRoutes.js';
 
 dotenv.config(); 
 
@@ -54,6 +55,7 @@ app.use('/api/eventDetails', EventDetailsRoutes);
 app.use("/api/comments", commentRoutes);
 app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/form', formRoutes); // Changed to /api/form for better route organization
 
 
 

@@ -3,8 +3,8 @@ import User from "../models/User.js";
 import Event from "../models/Event.js";
 import upload from "../middleware/upload.js";
 import cloudinary from "../config/cloudinary.js";
-import PendingUser from '../models/PendingUser.js';
-import RejectedUser from '../models/RejectedUser.js';
+import PendingUser from "../models/PendingUser.js";
+import RejectedUser from "../models/RejectedUser.js";
 import sendMail from "../utils/mailSender.js";
 const router = express.Router();
 
@@ -327,7 +327,7 @@ router.get("/stats", async (req, res) => {
 // New route to fetch users grouped by year of validation
 router.get("/byYear", async (req, res) => {
   try {
-    const users = await User.find();    // Group users by year of validation
+    const users = await User.find(); // Group users by year of validation
     const usersByYear = users.reduce((acc, user) => {
       const year = user.validityDate.getFullYear();
       if (!acc[year]) {
@@ -351,7 +351,7 @@ router.get("/byYear", async (req, res) => {
         portfolio: user.portfolio,
         cv: user.cv,
         validityDate: user.validityDate,
-        isValid: user.validityDate >= new Date()
+        isValid: user.validityDate >= new Date(),
       });
       return acc;
     }, {});
@@ -391,13 +391,17 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
     // Check if the user already exists in the main collection
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "User with this email already exists" });
+      return res
+        .status(400)
+        .json({ error: "User with this email already exists" });
     }
 
     // Check if the user is already in the pending collection
     const existingPendingUser = await PendingUser.findOne({ email });
     if (existingPendingUser) {
-      return res.status(400).json({ error: "Registration already pending approval" });
+      return res
+        .status(400)
+        .json({ error: "Registration already pending approval" });
     }
 
     // Create a new pending user
@@ -422,18 +426,19 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
     // Send confirmation email to user
     try {
       const emailText = `Dear ${name},\n\nThank you for registering with Comptron. Your registration has been received and is pending admin approval.\n\nYou will receive another email once your account has been approved.\n\nBest regards,\nThe Comptron Team`;
-      
-      await sendMail(
-        email,
-        "Registration Received - Comptron",
-        emailText
-      );
+
+      await sendMail(email, "Registration Received - Comptron", emailText);
     } catch (emailError) {
       console.error("Failed to send user confirmation email:", emailError);
       // Continue with the registration process even if email fails
     }
 
-    res.status(201).json({ message: "Registration submitted for approval", user: newPendingUser });
+    res
+      .status(201)
+      .json({
+        message: "Registration submitted for approval",
+        user: newPendingUser,
+      });
   } catch (error) {
     console.error("Error in pending registration:", error);
     res.status(500).json({ error: error.message });
@@ -454,14 +459,14 @@ router.get("/pending", async (req, res) => {
 router.post("/approve/:id", async (req, res) => {
   try {
     console.log("Approving user with ID:", req.params.id);
-    
+
     // Find the pending user
     const pendingUser = await PendingUser.findById(req.params.id);
     if (!pendingUser) {
       console.log("Pending user not found:", req.params.id);
       return res.status(404).json({ message: "Pending user not found" });
     }
-    
+
     console.log("Found pending user:", pendingUser.email);
 
     // Create a new user in the main Users collection
@@ -489,29 +494,33 @@ router.post("/approve/:id", async (req, res) => {
       bloodGroup: pendingUser.bloodGroup,
       dateOfBirth: pendingUser.dateOfBirth,
     };
-    
+
     // Add optional fields only if they exist
     if (pendingUser.studentId) newUserData.studentId = pendingUser.studentId;
     if (pendingUser.bloodGroup) newUserData.bloodGroup = pendingUser.bloodGroup;
     if (pendingUser.department) newUserData.department = pendingUser.department;
-    if (pendingUser.dateOfBirth) newUserData.dateOfBirth = pendingUser.dateOfBirth;
-    
-    console.log("Creating new user with data:", { ...newUserData, password: "[HIDDEN]" });
-    
+    if (pendingUser.dateOfBirth)
+      newUserData.dateOfBirth = pendingUser.dateOfBirth;
+
+    console.log("Creating new user with data:", {
+      ...newUserData,
+      password: "[HIDDEN]",
+    });
+
     const newUser = new User(newUserData);
 
     // Save the new user
     await newUser.save();
     console.log("User saved successfully with ID:", newUser._id);
-    
+
     // Remove the user from the pending collection
     await PendingUser.findByIdAndDelete(req.params.id);
     console.log("Removed from pending collection");
-    
+
     // Send an approval notification email
     try {
       const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
-      
+
       await sendMail(
         pendingUser.email,
         "Account Approved - Welcome to Comptron",
@@ -523,10 +532,16 @@ router.post("/approve/:id", async (req, res) => {
       // Continue with the approval process even if email fails
     }
 
-    res.status(200).json({ message: "User approved successfully", user: newUser });
+    res
+      .status(200)
+      .json({ message: "User approved successfully", user: newUser });
   } catch (error) {
     console.error("Error in approve route:", error.stack || error);
-    res.status(500).json({ error: error.message || "Internal server error during approval" });
+    res
+      .status(500)
+      .json({
+        error: error.message || "Internal server error during approval",
+      });
   }
 });
 
@@ -549,14 +564,14 @@ router.post("/reject/:id", async (req, res) => {
       image: pendingUser.image,
       firebaseUserId: pendingUser.firebaseUserId,
       rejectionReason: req.body.reason || "Not specified",
-      rejectedAt: new Date()
+      rejectedAt: new Date(),
     });
 
     await rejectedUser.save();
-    
+
     // Remove from pending collection
     await PendingUser.findByIdAndDelete(req.params.id);
-    
+
     res.status(200).json({ message: "User rejected successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -567,17 +582,17 @@ router.post("/reject/:id", async (req, res) => {
 router.post("/bulk-approve", async (req, res) => {
   try {
     const { userIds } = req.body;
-    
+
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return res.status(400).json({ message: "No user IDs provided" });
     }
-    
+
     const results = {
       success: 0,
       failed: 0,
-      errors: []
+      errors: [],
     };
-    
+
     // Process each user sequentially
     for (const userId of userIds) {
       try {
@@ -588,12 +603,12 @@ router.post("/bulk-approve", async (req, res) => {
           results.errors.push(`User ${userId} not found`);
           continue;
         }
-        
+
         // Create in main users collection
         const customId = await generateUniqueId();
         const validityDate = new Date();
         validityDate.setFullYear(validityDate.getFullYear() + 1); // Valid for 1 year
-        
+
         const newUser = new User({
           name: pendingUser.name,
           email: pendingUser.email,
@@ -608,35 +623,43 @@ router.post("/bulk-approve", async (req, res) => {
           bloodGroup: pendingUser.bloodGroup,
           department: pendingUser.department,
           dateOfBirth: pendingUser.dateOfBirth,
-          status: "active"
+          status: "active",
         });
-        
+
         await newUser.save();
         await PendingUser.findByIdAndDelete(userId);
-        
+
         // Send approval email
         try {
           const emailText = `Dear ${pendingUser.name},\n\nYour registration has been approved. You can now access all platform features with your account.\n\nYour ID: ${customId}\n\nWelcome to Comptron!\n\nBest regards,\nThe Comptron Team`;
-          
+
           sendMail(
             pendingUser.email,
             "Account Approved - Welcome to Comptron",
             emailText
-          ).catch(err => console.error(`Failed to send approval email to ${pendingUser.email}:`, err));
+          ).catch((err) =>
+            console.error(
+              `Failed to send approval email to ${pendingUser.email}:`,
+              err
+            )
+          );
         } catch (emailError) {
-          console.error(`Failed to send approval email to ${pendingUser.email}:`, emailError);
+          console.error(
+            `Failed to send approval email to ${pendingUser.email}:`,
+            emailError
+          );
         }
-        
+
         results.success++;
       } catch (error) {
         results.failed++;
         results.errors.push(`Error processing ${userId}: ${error.message}`);
       }
     }
-    
+
     res.status(200).json({
       message: `Processed ${userIds.length} users. ${results.success} approved, ${results.failed} failed.`,
-      results
+      results,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -647,17 +670,17 @@ router.post("/bulk-approve", async (req, res) => {
 router.get("/pending/check/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    
+
     if (!email) {
       return res.status(400).json({ error: "Email parameter is required" });
     }
-    
+
     // Check if user exists in pending collection
     const pendingUser = await PendingUser.findOne({ email });
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       isPending: !!pendingUser,
-      email
+      email,
     });
   } catch (error) {
     console.error("Error checking pending user:", error);
