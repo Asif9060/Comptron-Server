@@ -64,25 +64,35 @@ router.post(
         ));
       }
 
-      const startDateTime = moment
-        .tz(`${startDate} ${startTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
-        .toDate();
+      const startDateTime = moment.tz(
+        `${startDate} ${startTime}`,
+        "YYYY-MM-DD HH:mm",
+        "Asia/Dhaka"
+      );
+      const endDateTime = moment.tz(
+        `${endDate} ${endTime}`,
+        "YYYY-MM-DD HH:mm",
+        "Asia/Dhaka"
+      );
 
-      const endDateTime = moment
-        .tz(`${endDate} ${endTime}`, "YYYY-MM-DD hh:mm A", "Asia/Dhaka")
-        .toDate();
+      // Parse registration form data if it exists
+      let formConfig;
+      if (req.body.registrationForm) {
+        formConfig = JSON.parse(req.body.registrationForm);
+      }
 
-      const newEvent = new Event({
+      const event = new Event({
         title,
         description,
-        startDateTime,
-        endDateTime,
         mainImage,
         galleryImages,
+        startDateTime,
+        endDateTime,
+        registrationForm: formConfig // Add registration form configuration
       });
 
-      await newEvent.save();
-      res.status(201).json(newEvent);
+      await event.save();
+      res.status(201).json(event);
     } catch (error) {
       console.error("Error creating event:", error);
       res.status(500).json({ message: "Error creating event", error });
@@ -116,13 +126,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get a single event by ID
 router.get("/:id", async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: "Event not found" });
-    res.status(200).json(event);
+    const event = await Event.findById(req.params.id)
+      .select({
+        title: 1,
+        description: 1,
+        mainImage: 1,
+        galleryImages: 1,
+        startDateTime: 1,
+        endDateTime: 1,
+        registrationForm: 1, // Explicitly include registration form data
+        createdAt: 1
+      });
+      
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    res.json(event);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching event", error });
+    console.error("Error fetching event:", error);
+    res.status(500).json({ message: "Error fetching event details", error: error.message });
   }
 });
 
@@ -176,18 +201,23 @@ router.put(
         ));
       }
 
-      const updatedEvent = await Event.findByIdAndUpdate(
+      // Handle registration form updates
+      if (req.body.registrationForm) {
+        updates.registrationForm = JSON.parse(req.body.registrationForm);
+      }
+
+      const event = await Event.findByIdAndUpdate(
         req.params.id,
-        updates,
+        { $set: updates },
         { new: true }
       );
 
-      if (!updatedEvent)
+      if (!event)
         return res.status(404).json({ message: "Event not found" });
 
       res
         .status(200)
-        .json({ message: "Event updated successfully", updatedEvent });
+        .json({ message: "Event updated successfully", event });
     } catch (error) {
       res.status(500).json({ message: "Error updating event", error });
     }
