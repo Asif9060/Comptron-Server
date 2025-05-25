@@ -64,3 +64,39 @@ export const handleEventRegistration = async (req, res) => {
         res.status(500).json({ message: "Error processing registration", error: error.message });
     }
 };
+
+// Function to get event registrations
+export const getEventRegistrations = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        // Get or create the Registration model
+        const registrationSchema = new mongoose.Schema({
+            eventId: { type: mongoose.Schema.Types.ObjectId, required: true },
+            submittedAt: { type: Date, default: Date.now },
+            formData: { type: Map, of: mongoose.Schema.Types.Mixed }
+        });
+
+        const Registration = mongoose.models.Registration || 
+            mongoose.model('Registration', registrationSchema);
+
+        // Fetch all registrations for this event
+        const registrations = await Registration.find({ eventId }).sort({ submittedAt: -1 });
+
+        // Transform the Map objects to plain objects for the response
+        const formattedRegistrations = registrations.map(reg => ({
+            ...reg.toObject(),
+            formData: Object.fromEntries(reg.formData)
+        }));
+
+        res.json(formattedRegistrations);
+    } catch (error) {
+        console.error('Error fetching registrations:', error);
+        res.status(500).json({ message: "Error fetching registrations", error: error.message });
+    }
+};
