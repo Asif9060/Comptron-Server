@@ -146,11 +146,12 @@ router.get("/:id", async (req, res) => {
     const event = await Event.findById(req.params.id).select({
       title: 1,
       description: 1,
+      bulletPoints: 1,
       mainImage: 1,
       galleryImages: 1,
       startDateTime: 1,
       endDateTime: 1,
-      registrationForm: 1, // Explicitly include registration form data
+      registrationForm: 1,
       createdAt: 1,
     });
 
@@ -169,8 +170,7 @@ router.get("/:id", async (req, res) => {
 router.put(
   "/:id",
   upload.fields([
-    { name: "mainImage", maxCount: 1 },
-    { name: "galleryImages", maxCount: 6 },
+    { name: "
   ]),
   async (req, res) => {
     try {
