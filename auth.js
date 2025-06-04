@@ -119,8 +119,8 @@
 // export default router;
 
 import express from 'express';
-import User from '../models/User.js';
-import TempUser from '../models/TempUser.js';
+import User from '../server/models/User.js';
+import TempUser from '../server/models/TempUser.js';
 import nodemailer from 'nodemailer';
 
 const router = express.Router();

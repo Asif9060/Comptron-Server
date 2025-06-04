@@ -7,7 +7,6 @@ import nodemailer from "nodemailer";
 import memberRoutes from "./routes/memberRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
-import newsArticleRoutes from "./routes/newsArticleRoutes.js";
 import RecentRoutes from "./routes/RecentRoutes.js";
 import EventDetailsRoutes from "./routes/EventDetailsRoutes.js";
 import bodyParser from "body-parser";
@@ -47,7 +46,6 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/members", memberRoutes);
 app.use("/api", eventRoutes);
 app.use("/api/news", newsRoutes);
-app.use("/api/articles", newsArticleRoutes); // New articles endpoint
 app.use("/api/eventImages", RecentRoutes);
 app.use("/api/AboutImages", AboutImageRoutes);
 app.use("/api/eventDetails", EventDetailsRoutes);
