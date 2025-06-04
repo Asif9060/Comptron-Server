@@ -150,10 +150,10 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     existingMember.isValid =
       isValid !== undefined
         ? isValid === "true" || isValid === true
-        : existingMember.isValid;
-    existingMember.socials = socials
-      ? JSON.parse(socials)
-      : existingMember.socials;
+        : existingMember.isValid;    console.log('Received socials:', socials); // Debug log
+    const parsedSocials = socials ? JSON.parse(socials) : existingMember.socials;
+    console.log('Parsed socials:', parsedSocials); // Debug log
+    existingMember.socials = parsedSocials;
     existingMember.image = imageUrl;
 
     await existingMember.save();
