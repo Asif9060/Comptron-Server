@@ -6,7 +6,6 @@ import cloudinary from "../config/cloudinary.js";
 import PendingUser from "../models/PendingUser.js";
 import RejectedUser from "../models/RejectedUser.js";
 import sendMail from "../utils/mailSender.js";
-import { unlinkSync } from "fs";
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -42,35 +41,19 @@ router.post("/register", upload.single("image"), async (req, res) => {
       department,
       dateOfBirth,
     } = req.body;
-    let imageUrl = null;
+    let imageUrl = req.body.image;
 
     if (req.file) {
-      try {
-        // Upload to Cloudinary with optimization
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "user_profiles",
-          width: 500,
-          height: 500,
-          crop: "fill",
-          gravity: "face",
-          quality: "auto",
-        });
-        imageUrl = result.secure_url;
-
-        // Clean up local file after successful upload
-        unlinkSync(req.file.path);
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        if (req.file.path) {
-          unlinkSync(req.file.path);
-        }
-        return res.status(500).json({ error: "Failed to upload image" });
-      }
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+      });
+      imageUrl = result.secure_url;
     }
 
     const customId = await generateUniqueId();
     const validityDate = new Date();
-    validityDate.setFullYear(validityDate.getFullYear() + 1);
+    validityDate.setFullYear(validityDate.getFullYear() + 1); // Valid for 1 year
 
     const newUser = new User({
       name,
@@ -91,10 +74,6 @@ router.post("/register", upload.single("image"), async (req, res) => {
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
-    // Clean up local file if it exists
-    if (req.file && req.file.path) {
-      unlinkSync(req.file.path);
-    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -113,14 +92,14 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
-// Update user profile (alternative endpoint)
-router.put("/update/:id", upload.single("image"), async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   try {
     const {
       name,
       skills,
       email,
       phone,
+      image,
       linkedIn,
       github,
       gender,
@@ -129,58 +108,12 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
       bio,
     } = req.body;
 
-    // Find current user to get existing image
-    const currentUser = await User.findOne({ customId: req.params.id });
-    if (!currentUser) {
-      if (req.file && req.file.path) {
-        unlinkSync(req.file.path);
-      }
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    let imageUrl = currentUser.image; // Keep existing image by default
-
-    if (req.file) {
-      try {
-        // Upload new image to Cloudinary with optimization
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "user_profiles",
-          width: 500,
-          height: 500,
-          crop: "fill",
-          gravity: "face",
-          quality: "auto",
-        });
-        imageUrl = result.secure_url;
-
-        // Delete old image from Cloudinary if it exists
-        if (currentUser.image) {
-          try {
-            const publicId = currentUser.image.split("/").pop().split(".")[0];
-            await cloudinary.uploader.destroy(`user_profiles/${publicId}`);
-          } catch (deleteError) {
-            console.error("Failed to delete old image:", deleteError);
-            // Continue with update even if old image deletion fails
-          }
-        }
-
-        // Clean up local file
-        unlinkSync(req.file.path);
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        if (req.file.path) {
-          unlinkSync(req.file.path);
-        }
-        return res.status(500).json({ error: "Failed to upload image" });
-      }
-    }
-
     const updateData = {
       name,
       skills,
       email,
       phone,
-      image: imageUrl,
+      image,
       linkedIn,
       github,
       gender,
@@ -195,14 +128,15 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     const isValid = user.validityDate >= new Date();
     res.json({ ...user.toObject(), isValid });
   } catch (error) {
-    if (req.file && req.file.path) {
-      unlinkSync(req.file.path);
-    }
     console.error(error);
-    res.status(400).json({ message: error.message || "Failed to update profile" });
+    res
+      .status(400)
+      .json({ message: error.message || "Failed to update profile" });
   }
 });
 
@@ -235,7 +169,7 @@ router.put("/validate/:id", async (req, res) => {
   }
 });
 
-// Update user profile with Cloudinary image upload
+// Update user profile by customId with Cloudinary image upload
 router.put("/profile/:id", upload.single("image"), async (req, res) => {
   try {
     const {
@@ -255,45 +189,16 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
       dateOfBirth,
     } = req.body;
 
-    // Find current user to get existing image
-    const currentUser = await User.findOne({ customId: req.params.id });
-    if (!currentUser) {
-      if (req.file && req.file.path) {
-        unlinkSync(req.file.path);
-      }
-      return res.status(404).json({ message: "User not found" });
+    let imageUrl = req.body.image;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+      });
+      imageUrl = result.secure_url;
     }
 
-    let imageUrl = currentUser.image; // Keep existing image by default
-
-    if (req.file) {
-      try {
-        // Upload new image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: "user_profiles",
-          width: 500,
-          height: 500,
-          crop: "fill",
-          gravity: "face",
-          quality: "auto",
-        });
-        imageUrl = result.secure_url;
-
-        // If there was a previous image, delete it from Cloudinary
-        if (currentUser.image) {
-          const publicId = currentUser.image.split("/").pop().split(".")[0];
-          await cloudinary.uploader.destroy(`user_profiles/${publicId}`);
-        }
-
-        // Clean up local file
-        unlinkSync(req.file.path);
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        if (req.file.path) {
-          unlinkSync(req.file.path);
-        }
-        return res.status(500).json({ error: "Failed to upload image" });
-      }
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required" });
     }
 
     const updateData = {
@@ -317,17 +222,22 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
     const user = await User.findOneAndUpdate(
       { customId: req.params.id },
       updateData,
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Add isValid flag
     const isValid = user.validityDate >= new Date();
     res.json({ ...user.toObject(), isValid });
   } catch (error) {
-    if (req.file && req.file.path) {
-      unlinkSync(req.file.path);
-    }
     console.error(error);
-    res.status(400).json({ message: error.message || "Failed to update profile" });
+    res
+      .status(400)
+      .json({ message: error.message || "Failed to update profile" });
   }
 });
 
@@ -358,24 +268,12 @@ router.get("/getByEmail/:email", async (req, res) => {
 router.delete("/delete/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ customId: id });
+    const user = await User.findOneAndDelete({ customId: id });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Delete image from Cloudinary if it exists
-    if (user.image) {
-      try {
-        const publicId = user.image.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(`user_profiles/${publicId}`);
-      } catch (cloudinaryError) {
-        console.error("Cloudinary deletion error:", cloudinaryError);
-        // Continue with user deletion even if image deletion fails
-      }
-    }
-
-    await User.findOneAndDelete({ customId: id });
     res.status(200).json({ message: "User account deleted successfully" });
   } catch (error) {
     console.error("Delete error:", error);
@@ -580,8 +478,8 @@ router.post("/approve/:id", async (req, res) => {
     const newUserData = {
       name: pendingUser.name,
       email: pendingUser.email,
-      phone: pendingUser.phone,
-      skills: pendingUser.skills,
+      phone: pendingUser.phone || "",
+      skills: pendingUser.skills || "",
       gender: pendingUser.gender || "Male", // Default to Male if not provided
       image: pendingUser.image || "",
       customId,
