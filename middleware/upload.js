@@ -1,16 +1,22 @@
 import multer from "multer";
 import path from "path";
 
-// Set up Multer storage engine
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+// Use memory storage for direct Cloudinary upload
+const storage = multer.memoryStorage();
 
-const upload = multer({ storage,limits: { fileSize: 10 * 1024 * 1024 }, });
+// File filter for images
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Not an image! Please upload an image.'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 export default upload;
