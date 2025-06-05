@@ -44,9 +44,13 @@ router.post("/register", upload.single("image"), async (req, res) => {
     let imageUrl = req.body.image;
 
     if (req.file) {
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      // Convert buffer to base64 for Cloudinary upload
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      
+      const result = await cloudinary.uploader.upload(dataURI, {
         folder: "users",
+        resource_type: 'auto'
       });
       imageUrl = result.secure_url;
     }
@@ -191,8 +195,13 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
 
     let imageUrl = req.body.image;
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      // Convert buffer to base64 for Cloudinary upload
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      
+      const result = await cloudinary.uploader.upload(dataURI, {
         folder: "users",
+        resource_type: 'auto'
       });
       imageUrl = result.secure_url;
     }
@@ -381,9 +390,13 @@ router.post("/pending/register", upload.single("image"), async (req, res) => {
     let imageUrl = req.body.image;
 
     if (req.file) {
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
+      // Convert buffer to base64 for Cloudinary upload
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      
+      const result = await cloudinary.uploader.upload(dataURI, {
         folder: "users",
+        resource_type: 'auto'
       });
       imageUrl = result.secure_url;
     }
