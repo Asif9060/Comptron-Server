@@ -23,6 +23,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://comptron.nwu.ac.bd",
   "https://comptron-club-62ud.vercel.app",
   "https://comptron.vercel.app",
 ];
