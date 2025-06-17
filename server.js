@@ -16,6 +16,7 @@ import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/auth.js";
 import AboutImageRoutes from "./routes/AboutImageRoutes.js";
 import formRoutes from "./routes/formRoutes.js";
+import advisoryRoutes from "./routes/advisoryRoutes.js";
 
 dotenv.config();
 
@@ -55,7 +56,8 @@ app.use("/api/eventDetails", EventDetailsRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/form", formRoutes); // Changed to /api/form for better route organization
+app.use("/api/form", formRoutes);
+app.use("/api/advisory", advisoryRoutes);
 
 const mongoURI = process.env.MONGO_URI;
 mongoose
