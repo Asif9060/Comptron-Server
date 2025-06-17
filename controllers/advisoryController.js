@@ -138,7 +138,7 @@ export const updateMember = async (req, res) => {
 };
 
 // Soft delete member
-exports.deleteMember = async (req, res) => {
+export const deleteMember = async (req, res) => {
   try {
     const member = await AdvisoryMember.findOne({
       customId: req.params.id,
@@ -157,7 +157,7 @@ exports.deleteMember = async (req, res) => {
 };
 
 // Get members by role
-exports.getMembersByRole = async (req, res) => {
+export const getMembersByRole = async (req, res) => {
   try {
     const { role } = req.params;
     const members = await AdvisoryMember.find({

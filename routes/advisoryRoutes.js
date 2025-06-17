@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { upload } from "../middleware/upload.js";
+import  upload  from "../middleware/upload.js";
 import {
   getAllMembers,
   getMemberById,
