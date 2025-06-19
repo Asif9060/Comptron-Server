@@ -57,7 +57,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/form", formRoutes);
-app.use("/api/advisory", advisoryRoutes);
+app.use("/api/AdvisoryPanel", advisoryRoutes);
 
 const mongoURI = process.env.MONGO_URI;
 mongoose
