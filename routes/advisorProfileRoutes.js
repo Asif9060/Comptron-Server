@@ -58,7 +58,7 @@ router.post('/', upload.fields([
             name,
             email,
             phone,
-            skill,
+            skill: skill.split(',').map(s => s.trim()),
             image: imageUrl,
             github,
             linkedin,
