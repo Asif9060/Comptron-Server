@@ -20,8 +20,10 @@ const advisorProfileSchema = new mongoose.Schema({    customId: {
         required: true
     },
     skill: {
-        type: String,
-    },
+        type: [String],
+        default: [],
+      },
+
     image: {
         type: String,  // Cloudinary URL
         required: true
