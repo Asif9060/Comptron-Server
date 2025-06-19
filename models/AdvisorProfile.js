@@ -47,14 +47,14 @@ const advisorProfileSchema = new mongoose.Schema({    customId: {
 });
 
 // Auto-generate customId before saving
-advisorProfileSchema.pre('save', async function(next) {
-    if (!this.customId) {
-        const lastProfile = await this.constructor.findOne({}, {}, { sort: { 'customId': -1 } });
-        const lastNumber = lastProfile ? parseInt(lastProfile.customId.split('-')[1]) : 0;
-        this.customId = `CMAP-${String(lastNumber + 1).padStart(4, '0')}`;
-    }
-    next();
-});
+// advisorProfileSchema.pre('save', async function(next) {
+//     if (!this.customId) {
+//         const lastProfile = await this.constructor.findOne({}, {}, { sort: { 'customId': -1 } });
+//         const lastNumber = lastProfile ? parseInt(lastProfile.customId.split('-')[1]) : 0;
+//         this.customId = `CMAP-${String(lastNumber + 1).padStart(4, '0')}`;
+//     }
+//     next();
+// });
 
 const AdvisorProfile = mongoose.model('AdvisorProfile', advisorProfileSchema);
 export default AdvisorProfile;
