@@ -21,7 +21,6 @@ const advisorProfileSchema = new mongoose.Schema({    customId: {
     },
     skill: {
         type: String,
-        required: true
     },
     image: {
         type: String,  // Cloudinary URL
@@ -29,19 +28,19 @@ const advisorProfileSchema = new mongoose.Schema({    customId: {
     },
     github: {
         type: String,
-        required: false
+        
     },
     linkedin: {
         type: String,
-        required: false
+        
     },
     portfolio: {
         type: String,
-        required: false
+        
     },
     cv: {
         type: String,  // Cloudinary URL for CV
-        required: false
+        
     }
 }, {
     timestamps: true
