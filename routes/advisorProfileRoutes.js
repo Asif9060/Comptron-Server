@@ -34,7 +34,12 @@ router.post('/', upload.fields([
     { name: 'cv', maxCount: 1 }
 ]), async (req, res) => {
     try {
-        const { name, email, phone, skill, github, linkedin, portfolio } = req.body;
+        const { customId, name, email, phone, skill, github, linkedin, portfolio } = req.body;
+
+        // Basic validation
+        if (!customId || !name || !email || !phone || !skill || !req.files?.image) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
 
         // Upload image to Cloudinary
         let imageUrl = '';
@@ -55,8 +60,8 @@ router.post('/', upload.fields([
         }
 
         const profile = new AdvisorProfile({
-            name,
             customId,
+            name,
             email,
             phone,
             skill: skill.split(',').map(s => s.trim()),
@@ -88,7 +93,7 @@ router.put('/:customId', upload.fields([
         const updates = { ...req.body };
 
         // Handle image upload if new image is provided
-        if (req.files.image) {
+        if (req.files?.image) {
             const result = await cloudinary.uploader.upload(req.files.image[0].path, {
                 folder: 'advisor-profiles'
             });
@@ -96,11 +101,16 @@ router.put('/:customId', upload.fields([
         }
 
         // Handle CV upload if new CV is provided
-        if (req.files.cv) {
+        if (req.files?.cv) {
             const cvResult = await cloudinary.uploader.upload(req.files.cv[0].path, {
                 folder: 'advisor-cvs'
             });
             updates.cv = cvResult.secure_url;
+        }
+
+        // Convert skill to array if sent as comma-separated string
+        if (updates.skill && typeof updates.skill === 'string') {
+            updates.skill = updates.skill.split(',').map(s => s.trim());
         }
 
         const updatedProfile = await AdvisorProfile.findOneAndUpdate(
