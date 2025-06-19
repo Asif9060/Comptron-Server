@@ -56,6 +56,7 @@ router.post('/', upload.fields([
 
         const profile = new AdvisorProfile({
             name,
+            customId,
             email,
             phone,
             skill: skill.split(',').map(s => s.trim()),
