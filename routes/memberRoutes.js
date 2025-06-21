@@ -25,7 +25,7 @@ const generateUniqueId = async () => {
    return `CCM${year}-${randomDigits}`;
 };
 
-router.get("/byYear", protectAdminRoute, async (req, res) => {
+router.get("/byYear", async (req, res) => {
    try {
       const members = await Member.find();
 
@@ -105,7 +105,7 @@ router.post("/", protectAdminRoute, upload.single("image"), async (req, res) => 
    }
 });
 
-router.get("/", protectAdminRoute, async (req, res) => {
+router.get("/", async (req, res) => {
    try {
       const members = await Member.find();
       res.status(200).json(members);
@@ -114,7 +114,7 @@ router.get("/", protectAdminRoute, async (req, res) => {
    }
 });
 
-router.get("/:id", protectAdminRoute, async (req, res) => {
+router.get("/:id", async (req, res) => {
    try {
       const member = await Member.findOne({ customId: req.params.id });
       if (!member) return res.status(404).json({ message: "Member not found" });
@@ -204,7 +204,7 @@ router.delete("/:id", protectAdminRoute, async (req, res) => {
    }
 });
 
-router.get("/:id", protectAdminRoute, async (req, res) => {
+router.get("/:id", async (req, res) => {
    const member = await Member.findOne({ customId: req.params.id });
    if (!member) return res.status(404).json({ error: "Member not found" });
    res.json(member);

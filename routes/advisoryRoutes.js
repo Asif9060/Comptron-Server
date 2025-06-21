@@ -61,7 +61,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
 });
 
 // Get user profile by customId
-router.get("/profile/:id", protectAdminRoute, async (req, res) => {
+router.get("/profile/:id", async (req, res) => {
   try {
     const user = await User.findOne({ customId: req.params.id });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -219,7 +219,7 @@ router.put("/profile/:id", protectAdminRoute, upload.single("image"), async (req
 });
 
 // Get all users
-router.get("/", protectAdminRoute, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -228,7 +228,7 @@ router.get("/", protectAdminRoute, async (req, res) => {
   }
 });
 
-router.get("/getByEmail/:email", protectAdminRoute, async (req, res) => {
+router.get("/getByEmail/:email", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -237,6 +237,7 @@ router.get("/getByEmail/:email", protectAdminRoute, async (req, res) => {
     res.status(500).json({ message: "Error fetching user", error });
   }
 });
+
 router.delete("/delete/:id", protectAdminRoute, async (req, res) => {
   try {
     const { id } = req.params;

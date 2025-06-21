@@ -34,7 +34,7 @@ router.post("/", protectAdminRoute, upload.single("image"), async (req, res) => 
 });
 
 
-router.get("/", protectAdminRoute, async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const images = await EventImage.find();
         res.status(200).json(images);

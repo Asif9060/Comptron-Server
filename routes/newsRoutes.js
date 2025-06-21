@@ -5,7 +5,7 @@ import protectAdminRoute from '../middleware/adminAuth.js';
 const router = express.Router();
 
 // Get all news
-router.get('/', protectAdminRoute, async (req, res) => {
+router.get('/', async (req, res) => {
     const news = await News.find();
     res.json(news);
 });

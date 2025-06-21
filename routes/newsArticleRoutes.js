@@ -53,12 +53,12 @@ router.post('/upload', protectAdminRoute, upload.single('image'), async (req, re
 
 // Get all news articles and create a new one
 router.route('/')
-    .get(protectAdminRoute, getAllNewsArticles)
+    .get(getAllNewsArticles)
     .post(protectAdminRoute, createNewsArticle);
 
 // Get, update, and delete a specific news article
 router.route('/:id')
-    .get(protectAdminRoute, getNewsArticleById)
+    .get(getNewsArticleById)
     .put(protectAdminRoute, updateNewsArticle)
     .delete(protectAdminRoute, deleteNewsArticle);
 

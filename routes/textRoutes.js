@@ -17,7 +17,7 @@ router.post('/text', protectAdminRoute, async (req, res) => {
 });
 
 // GET /api/text/:id - Retrieve content by ID
-router.get('/text/:id', protectAdminRoute, async (req, res) => {
+router.get('/text/:id', async (req, res) => {
   try {
     const text = await Text.findById(req.params.id);
     if (!text) return res.status(404).json({ message: 'Text not found' });

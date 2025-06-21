@@ -84,7 +84,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
 });
 
 // Get user profile by customId
-router.get("/profile/:id", protectAdminRoute, async (req, res) => {
+router.get("/profile/:id", async (req, res) => {
   try {
     const user = await User.findOne({ customId: req.params.id });
     if (!user) return res.status(404).json({ message: "User not found" });
