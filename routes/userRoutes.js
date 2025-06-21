@@ -6,7 +6,6 @@ import cloudinary from "../config/cloudinary.js";
 import PendingUser from "../models/PendingUser.js";
 import RejectedUser from "../models/RejectedUser.js";
 import sendMail from "../utils/mailSender.js";
-import protectAdminRoute from '../middleware/adminAuth.js';
 const router = express.Router();
 
 // Helper function to generate Unique ID like CM2025xxxx
@@ -97,7 +96,7 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", protectAdminRoute, async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   try {
     const {
       name,
@@ -145,7 +144,7 @@ router.put("/update/:id", protectAdminRoute, async (req, res) => {
   }
 });
 
-router.put("/validate/:id", protectAdminRoute, async (req, res) => {
+router.put("/validate/:id", async (req, res) => {
   try {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
@@ -175,7 +174,7 @@ router.put("/validate/:id", protectAdminRoute, async (req, res) => {
 });
 
 // Update user profile by customId with Cloudinary image upload
-router.put("/profile/:id", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.put("/profile/:id", upload.single("image"), async (req, res) => {
   try {
     const {
       name,
@@ -252,7 +251,7 @@ router.put("/profile/:id", protectAdminRoute, upload.single("image"), async (req
 });
 
 // Get all users
-router.get("/", protectAdminRoute, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const users = await User.find();
     // Add isValid flag to each user
@@ -275,7 +274,7 @@ router.get("/getByEmail/:email", async (req, res) => {
     res.status(500).json({ message: "Error fetching user", error });
   }
 });
-router.delete("/delete/:id", protectAdminRoute, async (req, res) => {
+router.delete("/delete/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOneAndDelete({ customId: id });
@@ -314,7 +313,7 @@ router.get("/user-growth", async (req, res) => {
 });
 
 // Stats Route (Admin Only)
-router.get("/stats", protectAdminRoute, async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isValid: true });

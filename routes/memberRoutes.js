@@ -3,7 +3,6 @@ import multer from "multer";
 import Member from "../models/Member.js";
 import DeletedMember from "../models/DeletedMember.js";
 import cloudinary from "../config/cloudinary.js";
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -60,7 +59,7 @@ router.get("/byYear", async (req, res) => {
 });
 
 // Create Member
-router.post("/", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
    try {
       const { name, role, email, phone, skills, socials, validityDate, isValid } =
          req.body;
@@ -124,7 +123,7 @@ router.get("/:id", async (req, res) => {
    }
 });
 
-router.put("/:id", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
    try {
       const { name, role, email, phone, skills, socials, validityDate, isValid } =
          req.body;
@@ -173,7 +172,7 @@ router.put("/:id", protectAdminRoute, upload.single("image"), async (req, res) =
    }
 });
 
-router.delete("/:id", protectAdminRoute, async (req, res) => {
+router.delete("/:id", async (req, res) => {
    const { id } = req.params;
 
    try {
@@ -210,7 +209,7 @@ router.get("/:id", async (req, res) => {
    res.json(member);
 });
 
-router.put("/validity/:id", protectAdminRoute, async (req, res) => {
+router.put("/validity/:id", async (req, res) => {
    const { isValid, validityDate } = req.body;
    const member = await Member.findOneAndUpdate(
       { customId: req.params.id },

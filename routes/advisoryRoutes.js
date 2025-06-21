@@ -3,7 +3,6 @@ import User from "../models/AdvisoryPanel.js";
 import Event from "../models/Event.js";
 import upload from "../middleware/upload.js";
 import cloudinary from "../config/cloudinary.js";
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -72,7 +71,7 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", protectAdminRoute, async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   try {
     const {
       name,
@@ -119,7 +118,7 @@ router.put("/update/:id", protectAdminRoute, async (req, res) => {
   }
 });
 
-router.put("/validate/:id", protectAdminRoute, async (req, res) => {
+router.put("/validate/:id", async (req, res) => {
   try {
     // Generate new customId
     const newCustomId = req.body.customId;
@@ -144,7 +143,7 @@ router.put("/validate/:id", protectAdminRoute, async (req, res) => {
 });
 
 // Update user profile by customId with Cloudinary image upload
-router.put("/profile/:id", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.put("/profile/:id", upload.single("image"), async (req, res) => {
   try {
     const {
       name,
@@ -237,8 +236,7 @@ router.get("/getByEmail/:email", async (req, res) => {
     res.status(500).json({ message: "Error fetching user", error });
   }
 });
-
-router.delete("/delete/:id", protectAdminRoute, async (req, res) => {
+router.delete("/delete/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOneAndDelete({ customId: id });
@@ -277,7 +275,7 @@ router.get("/user-growth", async (req, res) => {
 });
 
 // Stats Route (Admin Only)
-router.get("/stats", protectAdminRoute, async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isValid: true });

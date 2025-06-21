@@ -3,7 +3,6 @@ import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
 import cloudinary from "../config/cloudinary.js";
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -14,7 +13,7 @@ const upload = multer({ storage });
 Event.collection.createIndex({ startDateTime: 1 }).catch(console.error);
 
 router.post(
-  "/create", protectAdminRoute,
+  "/create",
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -169,7 +168,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.put(
-  "/:id", protectAdminRoute,
+  "/:id",
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -252,7 +251,7 @@ router.put(
   }
 );
 
-router.delete("/:id", protectAdminRoute, async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const event = await Event.findByIdAndDelete(id);

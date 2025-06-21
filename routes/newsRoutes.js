@@ -1,6 +1,5 @@
 import express from 'express';
 import News from '../models/News.js';
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -11,7 +10,7 @@ router.get('/', async (req, res) => {
 });
 
 // Add new news item
-router.post('/', protectAdminRoute, async (req, res) => {
+router.post('/', async (req, res) => {
     const { text, link } = req.body;
     const newNews = new News({ text, link });
     await newNews.save();
@@ -19,14 +18,14 @@ router.post('/', protectAdminRoute, async (req, res) => {
 });
 
 // Update news item
-router.put('/:id', protectAdminRoute, async (req, res) => {
+router.put('/:id', async (req, res) => {
     const { text, link } = req.body;
     const updatedNews = await News.findByIdAndUpdate(req.params.id, { text, link }, { new: true });
     res.json(updatedNews);
 });
 
 // Delete news item
-router.delete('/:id', protectAdminRoute, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     await News.findByIdAndDelete(req.params.id);
     res.json({ message: 'Deleted successfully' });
 });

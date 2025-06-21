@@ -8,14 +8,13 @@ import {
     updateNewsArticle,
     deleteNewsArticle
 } from '../controllers/newsArticleController.js';
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Upload image to cloudinary
-router.post('/upload', protectAdminRoute, upload.single('image'), async (req, res) => {
+router.post('/upload', upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -54,12 +53,12 @@ router.post('/upload', protectAdminRoute, upload.single('image'), async (req, re
 // Get all news articles and create a new one
 router.route('/')
     .get(getAllNewsArticles)
-    .post(protectAdminRoute, createNewsArticle);
+    .post(createNewsArticle);
 
 // Get, update, and delete a specific news article
 router.route('/:id')
     .get(getNewsArticleById)
-    .put(protectAdminRoute, updateNewsArticle)
-    .delete(protectAdminRoute, deleteNewsArticle);
+    .put(updateNewsArticle)
+    .delete(deleteNewsArticle);
 
 export default router;

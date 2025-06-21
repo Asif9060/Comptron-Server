@@ -18,22 +18,20 @@ import AboutImageRoutes from "./routes/AboutImageRoutes.js";
 import formRoutes from "./routes/formRoutes.js";
 import advisoryRoutes from "./routes/advisoryRoutes.js";
 import textRoutes from "./routes/textRoutes.js";
-import admin from 'firebase-admin';
 
 dotenv.config();
 
 // Initialize Firebase Admin SDK
 // TODO: Replace './path/to/your/serviceAccountKey.json' with the actual path to your Firebase service account key file.
 // You can download this file from your Firebase project settings -> Service accounts.
-try {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-  console.log('Firebase Admin SDK initialized successfully.');
-} catch (error) {
-  console.error('Error initializing Firebase Admin SDK:', error);
-}
+// try {
+//   admin.initializeApp({
+//     credential: admin.credential.cert('./path/to/your/serviceAccountKey.json')
+//   });
+//   console.log('Firebase Admin SDK initialized successfully.');
+// } catch (error) {
+//   console.error('Error initializing Firebase Admin SDK:', error);
+// }
 
 const app = express();
 

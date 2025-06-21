@@ -1,11 +1,10 @@
 import express from "express";
 import Text from "../models/Text.js";
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
 // POST /api/text - Save rich text content
-router.post('/text', protectAdminRoute, async (req, res) => {
+router.post('/text', async (req, res) => {
   try {
     const { textContent } = req.body;
     const newText = new Text({ textContent });

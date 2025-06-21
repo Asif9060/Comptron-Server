@@ -2,13 +2,12 @@ import express from "express";
 import multer from "multer";
 import EventImage from "../models/EventImage.js";
 import cloudinary from '../config/cloudinary.js';
-import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.post("/", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let imageUrl = null;
@@ -43,7 +42,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.put("/:id", protectAdminRoute, upload.single("image"), async (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let updateData = { title, description };
@@ -74,7 +73,7 @@ router.put("/:id", protectAdminRoute, upload.single("image"), async (req, res) =
 });
 
 
-router.delete("/:id", protectAdminRoute, async (req, res) => {
+router.delete("/:id", async (req, res) => {
     try {
         await EventImage.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Image deleted successfully" });
