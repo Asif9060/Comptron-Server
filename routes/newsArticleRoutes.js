@@ -8,13 +8,14 @@ import {
     updateNewsArticle,
     deleteNewsArticle
 } from '../controllers/newsArticleController.js';
+import { checkOrigin } from '../middleware/checkOrigin.js';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Upload image to cloudinary
-router.post('/upload', upload.single('image'), async (req, res) => {
+router.post('/upload', checkOrigin, upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -52,13 +53,13 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
 // Get all news articles and create a new one
 router.route('/')
-    .get(getAllNewsArticles)
-    .post(createNewsArticle);
+    .get(checkOrigin, getAllNewsArticles)
+    .post(checkOrigin, createNewsArticle);
 
 // Get, update, and delete a specific news article
 router.route('/:id')
-    .get(getNewsArticleById)
-    .put(updateNewsArticle)
-    .delete(deleteNewsArticle);
+    .get(checkOrigin, getNewsArticleById)
+    .put(checkOrigin, updateNewsArticle)
+    .delete(checkOrigin, deleteNewsArticle);
 
 export default router;

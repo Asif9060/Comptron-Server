@@ -1,10 +1,11 @@
 import express from "express";
 import Text from "../models/Text.js";
+import { checkOrigin } from '../middleware/checkOrigin.js';
 
 const router = express.Router();
 
 // POST /api/text - Save rich text content
-router.post('/text', async (req, res) => {
+router.post('/text', checkOrigin, async (req, res) => {
   try {
     const { textContent } = req.body;
     const newText = new Text({ textContent });
@@ -16,7 +17,7 @@ router.post('/text', async (req, res) => {
 });
 
 // GET /api/text/:id - Retrieve content by ID
-router.get('/text/:id', async (req, res) => {
+router.get('/text/:id', checkOrigin, async (req, res) => {
   try {
     const text = await Text.findById(req.params.id);
     if (!text) return res.status(404).json({ message: 'Text not found' });

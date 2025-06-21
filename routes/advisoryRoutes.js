@@ -3,11 +3,11 @@ import User from "../models/AdvisoryPanel.js";
 import Event from "../models/Event.js";
 import upload from "../middleware/upload.js";
 import cloudinary from "../config/cloudinary.js";
-
+import { checkOrigin } from '../middleware/checkOrigin.js';
 const router = express.Router();
 
 // Register new user with Cloudinary image upload
-router.post("/register", upload.single("image"), async (req, res) => {
+router.post("/register", checkOrigin, upload.single("image"), async (req, res) => {
   try {
     const {
       name,
@@ -60,7 +60,7 @@ router.post("/register", upload.single("image"), async (req, res) => {
 });
 
 // Get user profile by customId
-router.get("/profile/:id", async (req, res) => {
+router.get("/profile/:id", checkOrigin, async (req, res) => {
   try {
     const user = await User.findOne({ customId: req.params.id });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -71,7 +71,7 @@ router.get("/profile/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", checkOrigin, async (req, res) => {
   try {
     const {
       name,
@@ -118,7 +118,7 @@ router.put("/update/:id", async (req, res) => {
   }
 });
 
-router.put("/validate/:id", async (req, res) => {
+router.put("/validate/:id", checkOrigin, async (req, res) => {
   try {
     // Generate new customId
     const newCustomId = req.body.customId;
@@ -143,7 +143,7 @@ router.put("/validate/:id", async (req, res) => {
 });
 
 // Update user profile by customId with Cloudinary image upload
-router.put("/profile/:id", upload.single("image"), async (req, res) => {
+router.put("/profile/:id", checkOrigin, upload.single("image"), async (req, res) => {
   try {
     const {
       name,
@@ -218,7 +218,7 @@ router.put("/profile/:id", upload.single("image"), async (req, res) => {
 });
 
 // Get all users
-router.get("/", async (req, res) => {
+router.get("/", checkOrigin, async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -227,7 +227,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/getByEmail/:email", async (req, res) => {
+router.get("/getByEmail/:email", checkOrigin, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -236,7 +236,7 @@ router.get("/getByEmail/:email", async (req, res) => {
     res.status(500).json({ message: "Error fetching user", error });
   }
 });
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", checkOrigin, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findOneAndDelete({ customId: id });
@@ -252,7 +252,7 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-router.get("/user-growth", async (req, res) => {
+router.get("/user-growth", checkOrigin, async (req, res) => {
   try {
     const users = await User.aggregate([
       {
@@ -275,7 +275,7 @@ router.get("/user-growth", async (req, res) => {
 });
 
 // Stats Route (Admin Only)
-router.get("/stats", async (req, res) => {
+router.get("/stats", checkOrigin, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ isValid: true });
@@ -296,7 +296,7 @@ router.get("/stats", async (req, res) => {
 });
 
 // New route to fetch users grouped by year of validation
-router.get("/byYear", async (req, res) => {
+router.get("/byYear", checkOrigin, async (req, res) => {
   try {
     const users = await User.find(); // Group users by year of validation
     const usersByYear = users.reduce((acc, user) => {

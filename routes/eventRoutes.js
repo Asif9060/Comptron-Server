@@ -1,10 +1,11 @@
 import express from "express";
 import Event from "../models/Event.js";
 import moment from "moment";
+import { checkOrigin } from '../middleware/checkOrigin.js';
 
 const router = express.Router();
 
-router.get("/event", async (req, res) => {
+router.get("/event", checkOrigin, async (req, res) => {
   try {
     const event = await Event.findOne();
     if (!event) return res.status(404).json({ message: "No event found" });
@@ -19,7 +20,7 @@ router.get("/event", async (req, res) => {
 });
 
 
-router.post("/event",async (req, res) => {
+router.post("/event", checkOrigin, async (req, res) => {
   try {
     console.log("Received request body:", req.body);
 

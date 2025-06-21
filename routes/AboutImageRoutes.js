@@ -2,12 +2,12 @@ import express from "express";
 import multer from "multer";
 import AboutImage from "../models/AboutImage.js";
 import cloudinary from '../config/cloudinary.js';
-
+import { checkOrigin } from '../middleware/checkOrigin.js';
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", checkOrigin, upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let imageUrl = null;
@@ -33,7 +33,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 });
 
 
-router.get("/", async (req, res) => {
+router.get("/", checkOrigin, async (req, res) => {
     try {
         const images = await AboutImage.find();
         res.status(200).json(images);
@@ -42,7 +42,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.put("/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", checkOrigin, upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let updateData = { title, description };
@@ -73,7 +73,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 });
 
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", checkOrigin, async (req, res) => {
     try {
         const image = await AboutImage.findById(req.params.id);
         if (!image) {

@@ -3,6 +3,7 @@ import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
 import cloudinary from "../config/cloudinary.js";
+import { checkOrigin } from '../middleware/checkOrigin.js';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const upload = multer({ storage });
 Event.collection.createIndex({ startDateTime: 1 }).catch(console.error);
 
 router.post(
-  "/create",
+  "/create", checkOrigin,
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -115,7 +116,7 @@ router.post(
 );
 
 // ✅ Updated GET route using allowDiskUse
-router.get("/", async (req, res) => {
+router.get("/", checkOrigin, async (req, res) => {
   try {
     const events = await Event.find().sort({ startDateTime: 1 }); // Ascending by startDateTime
 
@@ -141,7 +142,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get a single event by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", checkOrigin, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).select({
       title: 1,
@@ -168,7 +169,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.put(
-  "/:id",
+  "/:id", checkOrigin,
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -251,7 +252,7 @@ router.put(
   }
 );
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", checkOrigin, async (req, res) => {
   try {
     const { id } = req.params;
     const event = await Event.findByIdAndDelete(id);

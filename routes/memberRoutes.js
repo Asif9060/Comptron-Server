@@ -3,6 +3,7 @@ import multer from "multer";
 import Member from "../models/Member.js";
 import DeletedMember from "../models/DeletedMember.js";
 import cloudinary from "../config/cloudinary.js";
+import { checkOrigin } from '../middleware/checkOrigin.js';
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -24,7 +25,7 @@ const generateUniqueId = async () => {
    return `CCM${year}-${randomDigits}`;
 };
 
-router.get("/byYear", async (req, res) => {
+router.get("/byYear", checkOrigin, async (req, res) => {
    try {
       const members = await Member.find();
 
@@ -59,7 +60,7 @@ router.get("/byYear", async (req, res) => {
 });
 
 // Create Member
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", checkOrigin, upload.single("image"), async (req, res) => {
    try {
       const { name, role, email, phone, skills, socials, validityDate, isValid } =
          req.body;
@@ -104,7 +105,7 @@ router.post("/", upload.single("image"), async (req, res) => {
    }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", checkOrigin, async (req, res) => {
    try {
       const members = await Member.find();
       res.status(200).json(members);
@@ -113,7 +114,7 @@ router.get("/", async (req, res) => {
    }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", checkOrigin, async (req, res) => {
    try {
       const member = await Member.findOne({ customId: req.params.id });
       if (!member) return res.status(404).json({ message: "Member not found" });
@@ -123,7 +124,7 @@ router.get("/:id", async (req, res) => {
    }
 });
 
-router.put("/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", checkOrigin, upload.single("image"), async (req, res) => {
    try {
       const { name, role, email, phone, skills, socials, validityDate, isValid } =
          req.body;
@@ -172,7 +173,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
    }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", checkOrigin, async (req, res) => {
    const { id } = req.params;
 
    try {
@@ -203,13 +204,13 @@ router.delete("/:id", async (req, res) => {
    }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", checkOrigin, async (req, res) => {
    const member = await Member.findOne({ customId: req.params.id });
    if (!member) return res.status(404).json({ error: "Member not found" });
    res.json(member);
 });
 
-router.put("/validity/:id", async (req, res) => {
+router.put("/validity/:id", checkOrigin, async (req, res) => {
    const { isValid, validityDate } = req.body;
    const member = await Member.findOneAndUpdate(
       { customId: req.params.id },
