@@ -1,5 +1,6 @@
 import express from "express";
 import Comment from "../models/Comment.js";
+import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.post("/add", async (req, res) => {
 });
 
 // GET: Fetch all comments
-router.get("/", async (req, res) => {
+router.get("/", protectAdminRoute, async (req, res) => {
   try {
     const comments = await Comment.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, comments });
@@ -36,7 +37,7 @@ router.get("/:eventId", async (req, res) => {
 
 
 // DELETE: Remove a comment
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protectAdminRoute, async (req, res) => {
   try {
     await Comment.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: "Comment deleted" });

@@ -3,6 +3,7 @@ import multer from "multer";
 import Event from "../models/DetailedEvent.js";
 import moment from "moment-timezone";
 import cloudinary from "../config/cloudinary.js";
+import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const upload = multer({ storage });
 Event.collection.createIndex({ startDateTime: 1 }).catch(console.error);
 
 router.post(
-  "/create",
+  "/create", protectAdminRoute,
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -168,7 +169,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.put(
-  "/:id",
+  "/:id", protectAdminRoute,
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 6 },
@@ -251,12 +252,18 @@ router.put(
   }
 );
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protectAdminRoute, async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
-    if (!event) return res.status(404).json({ message: "Event not found" });
-    res.status(200).json({ message: "Event deleted successfully", event });
+    const { id } = req.params;
+    const event = await Event.findByIdAndDelete(id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json({ message: "Event deleted successfully" });
   } catch (error) {
+    console.error("Error deleting event:", error);
     res.status(500).json({ message: "Error deleting event", error });
   }
 });

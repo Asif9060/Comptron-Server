@@ -2,11 +2,13 @@ import express from "express";
 import multer from "multer";
 import AboutImage from "../models/AboutImage.js";
 import cloudinary from '../config/cloudinary.js';
+import protectAdminRoute from '../middleware/adminAuth.js';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-router.post("/", upload.single("image"), async (req, res) => {
+
+router.post("/", protectAdminRoute, upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let imageUrl = null;
@@ -32,7 +34,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 });
 
 
-router.get("/", async (req, res) => {
+router.get("/", protectAdminRoute, async (req, res) => {
     try {
         const images = await AboutImage.find();
         res.status(200).json(images);
@@ -41,7 +43,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.put("/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", protectAdminRoute, upload.single("image"), async (req, res) => {
     try {
         const { title, description } = req.body;
         let updateData = { title, description };
@@ -72,7 +74,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 });
 
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protectAdminRoute, async (req, res) => {
     try {
         const image = await AboutImage.findById(req.params.id);
         if (!image) {
