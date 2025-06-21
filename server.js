@@ -26,8 +26,9 @@ dotenv.config();
 // TODO: Replace './path/to/your/serviceAccountKey.json' with the actual path to your Firebase service account key file.
 // You can download this file from your Firebase project settings -> Service accounts.
 try {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   admin.initializeApp({
-    credential: admin.credential.cert('../comptron-91282-firebase-adminsdk-fbsvc-0df1ede6a0.json')
+    credential: admin.credential.cert(serviceAccount)
   });
   console.log('Firebase Admin SDK initialized successfully.');
 } catch (error) {
