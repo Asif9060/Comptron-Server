@@ -27,7 +27,7 @@ dotenv.config();
 // You can download this file from your Firebase project settings -> Service accounts.
 try {
   admin.initializeApp({
-    credential: admin.credential.cert('./comptron-91282-firebase-adminsdk-fbsvc-0df1ede6a0.json')
+    credential: admin.credential.cert('../comptron-91282-firebase-adminsdk-fbsvc-0df1ede6a0.json')
   });
   console.log('Firebase Admin SDK initialized successfully.');
 } catch (error) {
